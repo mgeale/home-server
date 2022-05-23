@@ -9,3 +9,12 @@ CREATE TABLE balances (
 );
 
 CREATE INDEX idx_balances_created ON balances(created);
+
+INSERT INTO balances (title, balance, balanceAud, pricebook, product, created) VALUES (
+    'BAL-0022',
+    100,
+    1000,
+    3333,
+    2222,
+    '2018-12-23 17:25:22'
+);

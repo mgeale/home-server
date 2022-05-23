@@ -14,17 +14,17 @@ func TestBalanceModelGet(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		userID    int
-		wantUser  *models.Balance
-		wantError error
+		name        string
+		balanceID   int
+		wantBalance *models.Balance
+		wantError   error
 	}{
 		{
-			name:   "Valid ID",
-			userID: 1,
-			wantUser: &models.Balance{
+			name:      "Valid ID",
+			balanceID: 1,
+			wantBalance: &models.Balance{
 				ID:         1,
-				Title:      "BAL-4321",
+				Title:      "BAL-0022",
 				Balance:    100,
 				BalanceAud: 1000,
 				PriceBook:  3333,
@@ -34,16 +34,16 @@ func TestBalanceModelGet(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:      "Zero ID",
-			userID:    0,
-			wantUser:  nil,
-			wantError: models.ErrNoRecord,
+			name:        "Zero ID",
+			balanceID:   0,
+			wantBalance: nil,
+			wantError:   models.ErrNoRecord,
 		},
 		{
-			name:      "Non-existent ID",
-			userID:    2,
-			wantUser:  nil,
-			wantError: models.ErrNoRecord,
+			name:        "Non-existent ID",
+			balanceID:   2,
+			wantBalance: nil,
+			wantError:   models.ErrNoRecord,
 		},
 	}
 
@@ -54,14 +54,14 @@ func TestBalanceModelGet(t *testing.T) {
 
 			m := BalanceModel{db}
 
-			user, err := m.Get(tt.userID)
+			balance, err := m.Get(tt.balanceID)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
 			}
 
-			if !reflect.DeepEqual(user, tt.wantUser) {
-				t.Errorf("want %v; got %v", tt.wantUser, user)
+			if !reflect.DeepEqual(balance, tt.wantBalance) {
+				t.Errorf("want %v; got %v", tt.wantBalance, balance)
 			}
 		})
 	}

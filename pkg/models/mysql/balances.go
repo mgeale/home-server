@@ -13,7 +13,7 @@ type BalanceModel struct {
 
 func (m *BalanceModel) Insert(title string, balance, balanceaud, pricebook, product int) (int, error) {
 	stmt := `INSERT INTO balances (title, balance, balanceaud, pricebook, product, created)
-    VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP()))`
+    VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())`
 
 	result, err := m.DB.Exec(stmt, title, balance, balanceaud, pricebook, product)
 	if err != nil {

@@ -38,13 +38,15 @@ func (app *application) getBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createBalance(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	var b models.Balance
+
+	err := json.NewDecoder(r.Body).Decode(&b)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	// _, err := app.balances.Insert("title", "content", "expires")
+	_, err = app.balances.Insert(b.Title, b.Balance, b.BalanceAud, b.PriceBook, b.Product)
 	if err != nil {
 		app.serverError(w, err)
 		return
