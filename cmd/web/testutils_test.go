@@ -37,11 +37,18 @@ func newTestApplication(t *testing.T) *application {
 		errorLog: log.New(io.Discard, "", 0),
 		infoLog:  log.New(io.Discard, "", 0),
 		balances: &mock.BalanceModel{},
+		users:    &mock.UserModel{},
 	}
 }
 
 func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, []byte) {
-	rs, err := ts.Client().Get(ts.URL + urlPath)
+	req, err := http.NewRequest("GET", ts.URL+urlPath, nil)
+	req.SetBasicAuth("alice@example.com", "passwd")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rs, err := ts.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
