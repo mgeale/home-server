@@ -11,7 +11,7 @@ type TransactionModel struct {
 	DB *sql.DB
 }
 
-func (m *TransactionModel) Insert(name string, amount int, date int, transactionType string) (int, error) {
+func (m *TransactionModel) Insert(name string, amount int, date string, transactionType string) (int, error) {
 	stmt := `INSERT INTO transactions (name, amount, date, type, created)
     VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
 
@@ -49,7 +49,7 @@ func (m *TransactionModel) Get(id int) (*models.Transaction, error) {
 }
 
 func (m *TransactionModel) Latest() ([]*models.Transaction, error) {
-	stmt := `SELECT id, name, amount, date, type created FROM transactions
+	stmt := `SELECT id, name, amount, date, type, created FROM transactions
     ORDER BY created DESC LIMIT 10`
 
 	rows, err := m.DB.Query(stmt)

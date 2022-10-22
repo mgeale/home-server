@@ -58,7 +58,7 @@ func (app *application) createBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getTransactions(w http.ResponseWriter, r *http.Request) {
-	ts, err := app.transaction.Latest()
+	ts, err := app.transactions.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -74,7 +74,7 @@ func (app *application) getTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := app.transaction.Get(id)
+	t, err := app.transactions.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -96,7 +96,7 @@ func (app *application) createTransaction(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	_, err = app.transaction.Insert(t.Name, t.Amount, t.Date, t.Type)
+	_, err = app.transactions.Insert(t.Name, t.Amount, t.Date, t.Type)
 	if err != nil {
 		app.serverError(w, err)
 		return

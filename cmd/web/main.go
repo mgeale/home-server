@@ -2,10 +2,8 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +21,7 @@ type application struct {
 		Get(int) (*models.Balance, error)
 		Latest() ([]*models.Balance, error)
 	}
-	transaction interface {
+	transactions interface {
 		Insert(string, int, string, string) (int, error)
 		Get(int) (*models.Transaction, error)
 		Latest() ([]*models.Transaction, error)
@@ -50,26 +48,17 @@ func main() {
 	defer db.Close()
 
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		balances: &mysql.BalanceModel{DB: db},
-		users:    &mysql.UserModel{DB: db},
+		errorLog:     errorLog,
+		infoLog:      infoLog,
+		balances:     &mysql.BalanceModel{DB: db},
+		transactions: &mysql.TransactionModel{DB: db},
+		users:        &mysql.UserModel{DB: db},
 	}
-
-	caCert, err := ioutil.ReadFile("./tls/cert.pem")
-	if err != nil {
-		log.Fatal(err)
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
 
 	tlsConfig := &tls.Config{
-		ClientCAs:                caCertPool,
-		ClientAuth:               tls.RequireAndVerifyClientCert,
 		PreferServerCipherSuites: true,
 		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
-	tlsConfig.BuildNameToCertificate()
 
 	srv := &http.Server{
 		Addr:         *addr,
