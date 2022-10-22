@@ -23,6 +23,11 @@ type application struct {
 		Get(int) (*models.Balance, error)
 		Latest() ([]*models.Balance, error)
 	}
+	transaction interface {
+		Insert(string, int, string, string) (int, error)
+		Get(int) (*models.Transaction, error)
+		Latest() ([]*models.Transaction, error)
+	}
 	users interface {
 		Insert(string, string, string) error
 		Authenticate(string, string) error

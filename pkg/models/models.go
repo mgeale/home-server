@@ -21,6 +21,15 @@ type Balance struct {
 	Created     time.Time
 }
 
+type Transaction struct {
+	ID      int
+	Name    string
+	Amount  int
+	Date    string
+	Type    string
+	Created time.Time
+}
+
 type User struct {
 	ID             int
 	Name           string
