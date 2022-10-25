@@ -1,8 +1,8 @@
 CREATE TABLE balances (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
-    balance INTEGER NOT NULL,
-    balanceaud INTEGER NOT NULL,
+    balance DECIMAL(16,9) NOT NULL,
+    balanceaud DECIMAL(18,2),
     pricebookid INTEGER NOT NULL,
     productid INTEGER NOT NULL,
     created DATETIME NOT NULL
@@ -12,8 +12,8 @@ CREATE INDEX idx_balances_created ON balances(created);
 
 INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created) VALUES (
     'BAL-0022',
-    100,
-    1000,
+    100.89,
+    1000.01,
     3333,
     2222,
     '2018-12-23 17:25:22'
@@ -22,7 +22,7 @@ INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created
 CREATE TABLE transactions (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
-    amount INTEGER NOT NULL,
+    amount DECIMAL(9,2) NOT NULL,
     date VARCHAR(100) NOT NULL,
     type VARCHAR(100) NOT NULL,
     created DATETIME NOT NULL

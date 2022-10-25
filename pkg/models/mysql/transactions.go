@@ -11,7 +11,7 @@ type TransactionModel struct {
 	DB *sql.DB
 }
 
-func (m *TransactionModel) Insert(name string, amount int, date string, transactionType string) (int, error) {
+func (m *TransactionModel) Insert(name string, amount float32, date string, transactionType string) (int, error) {
 	stmt := `INSERT INTO transactions (name, amount, date, type, created)
     VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
 
@@ -26,6 +26,24 @@ func (m *TransactionModel) Insert(name string, amount int, date string, transact
 	}
 
 	return int(id), nil
+}
+
+func (m *TransactionModel) Update(id int, name string, amount float32, date string, transactionType string) error {
+	stmt := `UPDATE transactions SET name = ?, amount = ?, date = ?, type = ? WHERE id = ?`
+
+	result, err := m.DB.Exec(stmt, name, amount, date, transactionType, id)
+	if err != nil {
+		return err
+	}
+
+	n, err := result.RowsAffected()
+	if n == 0 {
+		return models.ErrNoRecord
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *TransactionModel) Get(id int) (*models.Transaction, error) {
@@ -46,6 +64,24 @@ func (m *TransactionModel) Get(id int) (*models.Transaction, error) {
 	}
 
 	return t, nil
+}
+
+func (m *TransactionModel) Delete(id int) error {
+	stmt := `DELETE FROM transactions WHERE id = ?`
+
+	result, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return err
+	}
+
+	n, err := result.RowsAffected()
+	if n == 0 {
+		return models.ErrNoRecord
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *TransactionModel) Latest() ([]*models.Transaction, error) {

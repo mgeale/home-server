@@ -25,7 +25,7 @@ func TestTransactionModelGet(t *testing.T) {
 			wantTransaction: &models.Transaction{
 				ID:      1,
 				Name:    "name",
-				Amount:  100,
+				Amount:  100.00,
 				Date:    "2018-12-23 17:25:22",
 				Type:    "Repayment",
 				Created: time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
@@ -61,6 +61,82 @@ func TestTransactionModelGet(t *testing.T) {
 
 			if !reflect.DeepEqual(transaction, tt.wantTransaction) {
 				t.Errorf("want %v; got %v", tt.wantTransaction, transaction)
+			}
+		})
+	}
+}
+
+func TestTransactionModelUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("mysql: skipping integration test")
+	}
+
+	tests := []struct {
+		name      string
+		transID   int
+		wantError error
+	}{
+		{
+			name:      "Valid ID",
+			transID:   1,
+			wantError: nil,
+		},
+		{
+			name:      "Non-existent ID",
+			transID:   2,
+			wantError: models.ErrNoRecord,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, teardown := newTestDB(t)
+			defer teardown()
+
+			m := TransactionModel{db}
+
+			err := m.Update(tt.transID, "name", 200, "2018-12-23 17:25:22", "Repayment")
+
+			if err != tt.wantError {
+				t.Errorf("want %v; got %s", tt.wantError, err)
+			}
+		})
+	}
+}
+
+func TestTransactionModelDelete(t *testing.T) {
+	if testing.Short() {
+		t.Skip("mysql: skipping integration test")
+	}
+
+	tests := []struct {
+		name      string
+		transID   int
+		wantError error
+	}{
+		{
+			name:      "Valid ID",
+			transID:   1,
+			wantError: nil,
+		},
+		{
+			name:      "Non-existent ID",
+			transID:   2,
+			wantError: models.ErrNoRecord,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, teardown := newTestDB(t)
+			defer teardown()
+
+			m := TransactionModel{db}
+
+			err := m.Delete(tt.transID)
+
+			if err != tt.wantError {
+				t.Errorf("want %v; got %s", tt.wantError, err)
 			}
 		})
 	}

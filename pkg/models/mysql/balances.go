@@ -11,7 +11,7 @@ type BalanceModel struct {
 	DB *sql.DB
 }
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud, pricebookid, productid int) (int, error) {
+func (m *BalanceModel) Insert(name string, balance, balanceaud float32, pricebookid, productid int) (int, error) {
 	stmt := `INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created)
     VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())`
 
@@ -26,6 +26,24 @@ func (m *BalanceModel) Insert(name string, balance, balanceaud, pricebookid, pro
 	}
 
 	return int(id), nil
+}
+
+func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, pricebookid, productid int) error {
+	stmt := `UPDATE balances SET name = ?, balance = ?, balanceaud = ?, pricebookid = ?, productid = ? WHERE id = ?`
+
+	result, err := m.DB.Exec(stmt, name, balance, balanceaud, pricebookid, productid, id)
+	if err != nil {
+		return err
+	}
+
+	n, err := result.RowsAffected()
+	if n == 0 {
+		return models.ErrNoRecord
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *BalanceModel) Get(id int) (*models.Balance, error) {
@@ -46,6 +64,24 @@ func (m *BalanceModel) Get(id int) (*models.Balance, error) {
 	}
 
 	return s, nil
+}
+
+func (m *BalanceModel) Delete(id int) error {
+	stmt := `DELETE FROM balances WHERE id = ?`
+
+	result, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return err
+	}
+
+	n, err := result.RowsAffected()
+	if n == 0 {
+		return models.ErrNoRecord
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *BalanceModel) Latest() ([]*models.Balance, error) {

@@ -34,15 +34,16 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 
 func newTestApplication(t *testing.T) *application {
 	return &application{
-		errorLog: log.New(io.Discard, "", 0),
-		infoLog:  log.New(io.Discard, "", 0),
-		balances: &mock.BalanceModel{},
-		users:    &mock.UserModel{},
+		errorLog:     log.New(io.Discard, "", 0),
+		infoLog:      log.New(io.Discard, "", 0),
+		balances:     &mock.BalanceModel{},
+		transactions: &mock.TransactionModel{},
+		users:        &mock.UserModel{},
 	}
 }
 
-func (ts *testServer) get(t *testing.T, urlPath string) (int, http.Header, []byte) {
-	req, err := http.NewRequest("GET", ts.URL+urlPath, nil)
+func (ts *testServer) request(t *testing.T, method string, urlPath string, r io.Reader) (int, http.Header, []byte) {
+	req, err := http.NewRequest(method, ts.URL+urlPath, r)
 	req.SetBasicAuth("alice@example.com", "passwd")
 	if err != nil {
 		t.Fatal(err)

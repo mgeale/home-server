@@ -9,8 +9,8 @@ import (
 var mockBalance = &models.Balance{
 	ID:          1,
 	Name:        "BAL-0022",
-	Balance:     100,
-	BalanceAUD:  100,
+	Balance:     100.01,
+	BalanceAUD:  100.12,
 	PricebookID: 2,
 	ProductID:   3,
 	Created:     time.Now(),
@@ -18,8 +18,17 @@ var mockBalance = &models.Balance{
 
 type BalanceModel struct{}
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud, pricebook, product int) (int, error) {
+func (m *BalanceModel) Insert(name string, balance, balanceaud float32, pricebook, product int) (int, error) {
 	return 2, nil
+}
+
+func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, pricebook, product int) error {
+	switch id {
+	case 1:
+		return nil
+	default:
+		return models.ErrNoRecord
+	}
 }
 
 func (m *BalanceModel) Get(id int) (*models.Balance, error) {
@@ -29,6 +38,10 @@ func (m *BalanceModel) Get(id int) (*models.Balance, error) {
 	default:
 		return nil, models.ErrNoRecord
 	}
+}
+
+func (m *BalanceModel) Delete(id int) error {
+	return nil
 }
 
 func (m *BalanceModel) Latest() ([]*models.Balance, error) {

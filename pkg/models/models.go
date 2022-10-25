@@ -14,8 +14,8 @@ var (
 type Balance struct {
 	ID          int
 	Name        string
-	Balance     int
-	BalanceAUD  int
+	Balance     float32
+	BalanceAUD  float32
 	PricebookID int
 	ProductID   int
 	Created     time.Time
@@ -24,7 +24,7 @@ type Balance struct {
 type Transaction struct {
 	ID      int
 	Name    string
-	Amount  int
+	Amount  float32
 	Date    string
 	Type    string
 	Created time.Time

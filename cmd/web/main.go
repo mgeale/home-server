@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mgeale/homeserver/pkg/models"
 	"github.com/mgeale/homeserver/pkg/models/mysql"
 )
@@ -17,17 +18,20 @@ type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	balances interface {
-		Insert(string, int, int, int, int) (int, error)
+		Insert(string, float32, float32, int, int) (int, error)
+		Update(int, string, float32, float32, int, int) error
 		Get(int) (*models.Balance, error)
+		Delete(int) error
 		Latest() ([]*models.Balance, error)
 	}
 	transactions interface {
-		Insert(string, int, string, string) (int, error)
+		Insert(string, float32, string, string) (int, error)
+		Update(int, string, float32, string, string) error
 		Get(int) (*models.Transaction, error)
+		Delete(int) error
 		Latest() ([]*models.Transaction, error)
 	}
 	users interface {
-		Insert(string, string, string) error
 		Authenticate(string, string) error
 		Get(int) (*models.User, error)
 	}
