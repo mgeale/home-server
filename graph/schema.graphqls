@@ -1,0 +1,32 @@
+type Balance {
+  id: ID!
+  name: String!
+  balance: Float!
+  balanceaud: Float!
+  pricebookid: String!
+  productid: String!
+  created: String!
+}
+
+type Transaction {
+  id: ID!
+  name: String!
+  amount: Float!
+  date: String!
+  type: String!
+  created: String!
+}
+
+input RefreshTokenInput{
+  token: String!
+}
+
+input Login {
+  username: String!
+  password: String!
+}
+
+type Query {
+  balances: [Balance!]!
+  transactions: [Transaction!]!
+}
