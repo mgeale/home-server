@@ -64,8 +64,8 @@ type Query {
 type Mutation {
   createBalance(input: NewBalance!): Int!
   createTransaction(input: NewTransaction!): Int!
-  updateBalance(input: UpdateBalance!): Balance!
-  updateTransaction(input: UpdateTransaction!): Transaction!
+  updateBalance(input: UpdateBalance!): Int!
+  updateTransaction(input: UpdateTransaction!): Int!
   deleteBalance(id: ID!): Int!
   deleteTransaction(id: ID!): Int!
 }

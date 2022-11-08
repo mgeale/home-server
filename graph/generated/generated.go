@@ -83,8 +83,8 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateBalance(ctx context.Context, input model.NewBalance) (int, error)
 	CreateTransaction(ctx context.Context, input model.NewTransaction) (int, error)
-	UpdateBalance(ctx context.Context, input model.UpdateBalance) (*model.Balance, error)
-	UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (*model.Transaction, error)
+	UpdateBalance(ctx context.Context, input model.UpdateBalance) (int, error)
+	UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (int, error)
 	DeleteBalance(ctx context.Context, id int) (int, error)
 	DeleteTransaction(ctx context.Context, id int) (int, error)
 }
@@ -451,8 +451,8 @@ type Query {
 type Mutation {
   createBalance(input: NewBalance!): Int!
   createTransaction(input: NewTransaction!): Int!
-  updateBalance(input: UpdateBalance!): Balance!
-  updateTransaction(input: UpdateTransaction!): Transaction!
+  updateBalance(input: UpdateBalance!): Int!
+  updateTransaction(input: UpdateTransaction!): Int!
   deleteBalance(id: ID!): Int!
   deleteTransaction(id: ID!): Int!
 }`, BuiltIn: false},
@@ -1080,9 +1080,9 @@ func (ec *executionContext) _Mutation_updateBalance(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Balance)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalance(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1092,23 +1092,7 @@ func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Balance_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Balance_name(ctx, field)
-			case "balance":
-				return ec.fieldContext_Balance_balance(ctx, field)
-			case "balanceaud":
-				return ec.fieldContext_Balance_balanceaud(ctx, field)
-			case "pricebookid":
-				return ec.fieldContext_Balance_pricebookid(ctx, field)
-			case "productid":
-				return ec.fieldContext_Balance_productid(ctx, field)
-			case "created":
-				return ec.fieldContext_Balance_created(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Balance", field.Name)
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {
@@ -1151,9 +1135,9 @@ func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Transaction)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1163,21 +1147,7 @@ func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Transaction_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Transaction_name(ctx, field)
-			case "amount":
-				return ec.fieldContext_Transaction_amount(ctx, field)
-			case "date":
-				return ec.fieldContext_Transaction_date(ctx, field)
-			case "type":
-				return ec.fieldContext_Transaction_type(ctx, field)
-			case "created":
-				return ec.fieldContext_Transaction_created(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	defer func() {

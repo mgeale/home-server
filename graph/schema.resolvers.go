@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/mgeale/homeserver/graph/generated"
 	"github.com/mgeale/homeserver/graph/model"
@@ -45,13 +44,35 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Ne
 	return id, nil
 }
 
-func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (*model.Balance, error) {
-	panic(fmt.Errorf("not implemented: UpdateBalance - updateBalance"))
+// UpdateBalance is the resolver for the updateBalance field.
+func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (int, error) {
+	var b *db.Balance
+
+	b.Balance = input.Balance
+	b.BalanceAUD = input.Balanceaud
+	b.PricebookID = input.Pricebookid
+	b.ProductID = input.Productid
+
+	id, err := r.app.UpdateBalance(ctx, b)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
-func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (*model.Transaction, error) {
-	panic(fmt.Errorf("not implemented: UpdateTransaction - updateTransaction"))
+func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (int, error) {
+	var t *db.Transaction
+
+	t.Amount = input.Amount
+	t.Date = input.Date
+	t.Type = input.Type
+
+	id, err := r.app.UpdateTransaction(ctx, t)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 // DeleteBalance is the resolver for the deleteBalance field.
