@@ -1,11 +1,11 @@
-package mysql
+package db
 
 import (
+	"log"
+	"os"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/mgeale/homeserver/pkg/models"
 )
 
 func TestUserModelGet(t *testing.T) {
@@ -16,13 +16,13 @@ func TestUserModelGet(t *testing.T) {
 	tests := []struct {
 		name      string
 		userID    int
-		wantUser  *models.User
+		wantUser  *User
 		wantError error
 	}{
 		{
 			name:   "Valid ID",
 			userID: 1,
-			wantUser: &models.User{
+			wantUser: &User{
 				ID:      1,
 				Name:    "Alice Jones",
 				Email:   "alice@example.com",
@@ -35,22 +35,25 @@ func TestUserModelGet(t *testing.T) {
 			name:      "Zero ID",
 			userID:    0,
 			wantUser:  nil,
-			wantError: models.ErrNoRecord,
+			wantError: ErrNoRecord,
 		},
 		{
 			name:      "Non-existent ID",
 			userID:    2,
 			wantUser:  nil,
-			wantError: models.ErrNoRecord,
+			wantError: ErrNoRecord,
 		},
 	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db, teardown := newTestDB(t)
 			defer teardown()
 
-			m := UserModel{db}
+			m := UserModel{db, infoLog, errorLog}
 
 			user, err := m.Get(tt.userID)
 

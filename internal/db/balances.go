@@ -1,17 +1,29 @@
-package mysql
+package db
 
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/mgeale/homeserver/pkg/models"
+	"log"
+	"time"
 )
 
-type BalanceModel struct {
-	DB *sql.DB
+type Balance struct {
+	ID          int
+	Name        string
+	Balance     float64
+	BalanceAUD  float64
+	PricebookID int
+	ProductID   int
+	Created     time.Time
 }
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud float32, pricebookid, productid int) (int, error) {
+type BalanceModel struct {
+	DB       *sql.DB
+	InfoLog  *log.Logger
+	ErrorLog *log.Logger
+}
+
+func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid int) (int, error) {
 	stmt := `INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created)
     VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())`
 
@@ -28,7 +40,7 @@ func (m *BalanceModel) Insert(name string, balance, balanceaud float32, priceboo
 	return int(id), nil
 }
 
-func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, pricebookid, productid int) error {
+func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, pricebookid, productid int) error {
 	stmt := `UPDATE balances SET name = ?, balance = ?, balanceaud = ?, pricebookid = ?, productid = ? WHERE id = ?`
 
 	result, err := m.DB.Exec(stmt, name, balance, balanceaud, pricebookid, productid, id)
@@ -38,7 +50,7 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, 
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return models.ErrNoRecord
+		return ErrNoRecord
 	} else if err != nil {
 		return err
 	}
@@ -46,24 +58,24 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, 
 	return nil
 }
 
-func (m *BalanceModel) Get(id int) (*models.Balance, error) {
+func (m *BalanceModel) Get(id int) (*Balance, error) {
 	stmt := `SELECT id, name, balance, balanceaud, pricebookid, productid, created FROM balances
     WHERE id = ?`
 
 	row := m.DB.QueryRow(stmt, id)
 
-	s := &models.Balance{}
+	b := &Balance{}
 
-	err := row.Scan(&s.ID, &s.Name, &s.Balance, &s.BalanceAUD, &s.PricebookID, &s.ProductID, &s.Created)
+	err := row.Scan(&b.ID, &b.Name, &b.Balance, &b.BalanceAUD, &b.PricebookID, &b.ProductID, &b.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, models.ErrNoRecord
+			return nil, ErrNoRecord
 		} else {
 			return nil, err
 		}
 	}
 
-	return s, nil
+	return b, nil
 }
 
 func (m *BalanceModel) Delete(id int) error {
@@ -76,7 +88,7 @@ func (m *BalanceModel) Delete(id int) error {
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return models.ErrNoRecord
+		return ErrNoRecord
 	} else if err != nil {
 		return err
 	}
@@ -84,7 +96,7 @@ func (m *BalanceModel) Delete(id int) error {
 	return nil
 }
 
-func (m *BalanceModel) Latest() ([]*models.Balance, error) {
+func (m *BalanceModel) Latest() ([]*Balance, error) {
 	stmt := `SELECT id, name, balance, balanceaud, pricebookid, productid, created FROM balances
     ORDER BY created DESC LIMIT 10`
 
@@ -95,10 +107,10 @@ func (m *BalanceModel) Latest() ([]*models.Balance, error) {
 
 	defer rows.Close()
 
-	snippets := []*models.Balance{}
+	snippets := []*Balance{}
 
 	for rows.Next() {
-		s := &models.Balance{}
+		s := &Balance{}
 		err = rows.Scan(&s.ID, &s.Name, &s.Balance, &s.BalanceAUD, &s.PricebookID, &s.ProductID, &s.Created)
 		if err != nil {
 			return nil, err

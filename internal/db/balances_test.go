@@ -1,11 +1,11 @@
-package mysql
+package db
 
 import (
+	"log"
+	"os"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/mgeale/homeserver/pkg/models"
 )
 
 func TestBalanceModelGet(t *testing.T) {
@@ -16,13 +16,13 @@ func TestBalanceModelGet(t *testing.T) {
 	tests := []struct {
 		name        string
 		balanceID   int
-		wantBalance *models.Balance
+		wantBalance Balance
 		wantError   error
 	}{
 		{
 			name:      "Valid ID",
 			balanceID: 1,
-			wantBalance: &models.Balance{
+			wantBalance: Balance{
 				ID:          1,
 				Name:        "BAL-0022",
 				Balance:     100.89,
@@ -36,23 +36,26 @@ func TestBalanceModelGet(t *testing.T) {
 		{
 			name:        "Zero ID",
 			balanceID:   0,
-			wantBalance: nil,
-			wantError:   models.ErrNoRecord,
+			wantBalance: Balance{},
+			wantError:   ErrNoRecord,
 		},
 		{
 			name:        "Non-existent ID",
 			balanceID:   2,
-			wantBalance: nil,
-			wantError:   models.ErrNoRecord,
+			wantBalance: Balance{},
+			wantError:   ErrNoRecord,
 		},
 	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db, teardown := newTestDB(t)
 			defer teardown()
 
-			m := BalanceModel{db}
+			m := BalanceModel{db, infoLog, errorLog}
 
 			balance, err := m.Get(tt.balanceID)
 
@@ -85,16 +88,19 @@ func TestBalanceModelUpdate(t *testing.T) {
 		{
 			name:      "Non-existent ID",
 			balanceID: 2,
-			wantError: models.ErrNoRecord,
+			wantError: ErrNoRecord,
 		},
 	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db, teardown := newTestDB(t)
 			defer teardown()
 
-			m := BalanceModel{db}
+			m := BalanceModel{db, infoLog, errorLog}
 
 			err := m.Update(tt.balanceID, "BAL-0022", 200, 2000, 3333, 2222)
 
@@ -123,16 +129,19 @@ func TestBalanceModelDelete(t *testing.T) {
 		{
 			name:      "Non-existent ID",
 			balanceID: 2,
-			wantError: models.ErrNoRecord,
+			wantError: ErrNoRecord,
 		},
 	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db, teardown := newTestDB(t)
 			defer teardown()
 
-			m := BalanceModel{db}
+			m := BalanceModel{db, infoLog, errorLog}
 
 			err := m.Delete(tt.balanceID)
 

@@ -2,13 +2,12 @@ package main
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mgeale/homeserver/pkg/models/mock"
+	"github.com/mgeale/homeserver/internal/app"
 )
 
 type testServer struct {
@@ -32,14 +31,8 @@ func newTestServer(t *testing.T, h http.Handler) *testServer {
 	return &testServer{ts}
 }
 
-func newTestApplication(t *testing.T) *application {
-	return &application{
-		errorLog:     log.New(io.Discard, "", 0),
-		infoLog:      log.New(io.Discard, "", 0),
-		balances:     &mock.BalanceModel{},
-		transactions: &mock.TransactionModel{},
-		users:        &mock.UserModel{},
-	}
+func newTestApplication(t *testing.T) *app.Application {
+	return &app.Application{}
 }
 
 func (ts *testServer) request(t *testing.T, method string, urlPath string, r io.Reader) (int, http.Header, []byte) {

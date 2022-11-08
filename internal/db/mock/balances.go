@@ -3,10 +3,10 @@ package mock
 import (
 	"time"
 
-	"github.com/mgeale/homeserver/pkg/models"
+	"github.com/mgeale/homeserver/internal/db"
 )
 
-var mockBalance = &models.Balance{
+var mockBalance = &db.Balance{
 	ID:          1,
 	Name:        "BAL-0022",
 	Balance:     100.01,
@@ -27,16 +27,16 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, 
 	case 1:
 		return nil
 	default:
-		return models.ErrNoRecord
+		return db.ErrNoRecord
 	}
 }
 
-func (m *BalanceModel) Get(id int) (*models.Balance, error) {
+func (m *BalanceModel) Get(id int) (*db.Balance, error) {
 	switch id {
 	case 1:
 		return mockBalance, nil
 	default:
-		return nil, models.ErrNoRecord
+		return nil, db.ErrNoRecord
 	}
 }
 
@@ -44,6 +44,6 @@ func (m *BalanceModel) Delete(id int) error {
 	return nil
 }
 
-func (m *BalanceModel) Latest() ([]*models.Balance, error) {
-	return []*models.Balance{mockBalance}, nil
+func (m *BalanceModel) Latest() ([]*db.Balance, error) {
+	return []*db.Balance{mockBalance}, nil
 }

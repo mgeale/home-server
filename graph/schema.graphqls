@@ -3,8 +3,8 @@ type Balance {
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: String!
-  productid: String!
+  pricebookid: Int!
+  productid: Int!
   created: String!
 }
 
@@ -26,7 +26,46 @@ input Login {
   password: String!
 }
 
+input NewBalance {
+  name: String!
+  balance: Float!
+  balanceaud: Float!
+  pricebookid: Int!
+  productid: Int!
+}
+
+input NewTransaction {
+  name: String!
+  amount: Float!
+  date: String!
+  type: String!
+}
+
+input UpdateBalance {
+  balance: Float!
+  balanceaud: Float!
+  pricebookid: Int!
+  productid: Int!
+}
+
+input UpdateTransaction {
+  amount: Float!
+  date: String!
+  type: String!
+}
+
 type Query {
   balances: [Balance!]!
   transactions: [Transaction!]!
+  balanceById(id: ID!): Balance!
+  transactionById(id: ID!): Transaction!
+}
+
+type Mutation {
+  createBalance(input: NewBalance!): Int!
+  createTransaction(input: NewTransaction!): Int!
+  updateBalance(input: UpdateBalance!): Balance!
+  updateTransaction(input: UpdateTransaction!): Transaction!
+  deleteBalance(id: ID!): Int!
+  deleteTransaction(id: ID!): Int!
 }

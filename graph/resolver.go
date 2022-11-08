@@ -1,11 +1,13 @@
 package graph
 
-import "github.com/mgeale/homeserver/cmd/web/app"
-
-// This file will not be regenerated automatically.
-//
-// It serves as dependency injection for your app, add any dependencies you require here.
+import "github.com/mgeale/homeserver/internal/app"
 
 type Resolver struct {
-	App *app.Application
+	app *app.Application
+}
+
+func NewResolver(app *app.Application) *Resolver {
+	return &Resolver{
+		app: app,
+	}
 }

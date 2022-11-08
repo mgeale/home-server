@@ -3,10 +3,10 @@ package mock
 import (
 	"time"
 
-	"github.com/mgeale/homeserver/pkg/models"
+	"github.com/mgeale/homeserver/internal/db"
 )
 
-var mockUser = &models.User{
+var mockUser = &db.User{
 	ID:      1,
 	Name:    "Alice",
 	Email:   "alice@example.com",
@@ -19,7 +19,7 @@ type UserModel struct{}
 func (m *UserModel) Insert(name, email, password string) error {
 	switch email {
 	case "dupe@example.com":
-		return models.ErrDuplicateEmail
+		return db.ErrDuplicateEmail
 	default:
 		return nil
 	}
@@ -30,15 +30,15 @@ func (m *UserModel) Authenticate(email, password string) error {
 	case "alice@example.com":
 		return nil
 	default:
-		return models.ErrInvalidCredentials
+		return db.ErrInvalidCredentials
 	}
 }
 
-func (m *UserModel) Get(id int) (*models.User, error) {
+func (m *UserModel) Get(id int) (*db.User, error) {
 	switch id {
 	case 1:
 		return mockUser, nil
 	default:
-		return nil, models.ErrNoRecord
+		return nil, db.ErrNoRecord
 	}
 }

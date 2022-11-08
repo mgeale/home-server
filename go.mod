@@ -5,7 +5,6 @@ go 1.19
 require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/vektah/gqlparser/v2 v2.5.1
 	golang.org/x/crypto v0.0.0-20221005025214-4161e89ecf1b
 )

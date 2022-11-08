@@ -1,17 +1,28 @@
-package mysql
+package db
 
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/mgeale/homeserver/pkg/models"
+	"log"
+	"time"
 )
 
-type TransactionModel struct {
-	DB *sql.DB
+type Transaction struct {
+	ID      int
+	Name    string
+	Amount  float64
+	Date    string
+	Type    string
+	Created time.Time
 }
 
-func (m *TransactionModel) Insert(name string, amount float32, date string, transactionType string) (int, error) {
+type TransactionModel struct {
+	DB       *sql.DB
+	InfoLog  *log.Logger
+	ErrorLog *log.Logger
+}
+
+func (m *TransactionModel) Insert(name string, amount float64, date string, transactionType string) (int, error) {
 	stmt := `INSERT INTO transactions (name, amount, date, type, created)
     VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
 
@@ -28,7 +39,7 @@ func (m *TransactionModel) Insert(name string, amount float32, date string, tran
 	return int(id), nil
 }
 
-func (m *TransactionModel) Update(id int, name string, amount float32, date string, transactionType string) error {
+func (m *TransactionModel) Update(id int, name string, amount float64, date string, transactionType string) error {
 	stmt := `UPDATE transactions SET name = ?, amount = ?, date = ?, type = ? WHERE id = ?`
 
 	result, err := m.DB.Exec(stmt, name, amount, date, transactionType, id)
@@ -38,7 +49,7 @@ func (m *TransactionModel) Update(id int, name string, amount float32, date stri
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return models.ErrNoRecord
+		return ErrNoRecord
 	} else if err != nil {
 		return err
 	}
@@ -46,18 +57,18 @@ func (m *TransactionModel) Update(id int, name string, amount float32, date stri
 	return nil
 }
 
-func (m *TransactionModel) Get(id int) (*models.Transaction, error) {
+func (m *TransactionModel) Get(id int) (*Transaction, error) {
 	stmt := `SELECT id, name, amount, date, type, created FROM transactions
     WHERE id = ?`
 
 	row := m.DB.QueryRow(stmt, id)
 
-	t := &models.Transaction{}
+	t := &Transaction{}
 
 	err := row.Scan(&t.ID, &t.Name, &t.Amount, &t.Date, &t.Type, &t.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, models.ErrNoRecord
+			return nil, ErrNoRecord
 		} else {
 			return nil, err
 		}
@@ -76,7 +87,7 @@ func (m *TransactionModel) Delete(id int) error {
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return models.ErrNoRecord
+		return ErrNoRecord
 	} else if err != nil {
 		return err
 	}
@@ -84,7 +95,7 @@ func (m *TransactionModel) Delete(id int) error {
 	return nil
 }
 
-func (m *TransactionModel) Latest() ([]*models.Transaction, error) {
+func (m *TransactionModel) Latest() ([]*Transaction, error) {
 	stmt := `SELECT id, name, amount, date, type, created FROM transactions
     ORDER BY created DESC LIMIT 10`
 
@@ -95,10 +106,10 @@ func (m *TransactionModel) Latest() ([]*models.Transaction, error) {
 
 	defer rows.Close()
 
-	ts := []*models.Transaction{}
+	ts := []*Transaction{}
 
 	for rows.Next() {
-		s := &models.Transaction{}
+		s := &Transaction{}
 		err = rows.Scan(&s.ID, &s.Name, &s.Amount, &s.Date, &s.Type, &s.Created)
 		if err != nil {
 			return nil, err

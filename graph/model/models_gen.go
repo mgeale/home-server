@@ -3,12 +3,12 @@
 package model
 
 type Balance struct {
-	ID          string  `json:"id"`
+	ID          int     `json:"id"`
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
-	Pricebookid string  `json:"pricebookid"`
-	Productid   string  `json:"productid"`
+	Pricebookid int     `json:"pricebookid"`
+	Productid   int     `json:"productid"`
 	Created     string  `json:"created"`
 }
 
@@ -17,15 +17,43 @@ type Login struct {
 	Password string `json:"password"`
 }
 
+type NewBalance struct {
+	Name        string  `json:"name"`
+	Balance     float64 `json:"balance"`
+	Balanceaud  float64 `json:"balanceaud"`
+	Pricebookid int     `json:"pricebookid"`
+	Productid   int     `json:"productid"`
+}
+
+type NewTransaction struct {
+	Name   string  `json:"name"`
+	Amount float64 `json:"amount"`
+	Date   string  `json:"date"`
+	Type   string  `json:"type"`
+}
+
 type RefreshTokenInput struct {
 	Token string `json:"token"`
 }
 
 type Transaction struct {
-	ID      string  `json:"id"`
+	ID      int     `json:"id"`
 	Name    string  `json:"name"`
 	Amount  float64 `json:"amount"`
 	Date    string  `json:"date"`
 	Type    string  `json:"type"`
 	Created string  `json:"created"`
+}
+
+type UpdateBalance struct {
+	Balance     float64 `json:"balance"`
+	Balanceaud  float64 `json:"balanceaud"`
+	Pricebookid int     `json:"pricebookid"`
+	Productid   int     `json:"productid"`
+}
+
+type UpdateTransaction struct {
+	Amount float64 `json:"amount"`
+	Date   string  `json:"date"`
+	Type   string  `json:"type"`
 }
