@@ -16,13 +16,13 @@ func TestBalanceModelGet(t *testing.T) {
 	tests := []struct {
 		name        string
 		balanceID   int
-		wantBalance Balance
+		wantBalance *Balance
 		wantError   error
 	}{
 		{
 			name:      "Valid ID",
 			balanceID: 1,
-			wantBalance: Balance{
+			wantBalance: &Balance{
 				ID:          1,
 				Name:        "BAL-0022",
 				Balance:     100.89,
@@ -36,13 +36,13 @@ func TestBalanceModelGet(t *testing.T) {
 		{
 			name:        "Zero ID",
 			balanceID:   0,
-			wantBalance: Balance{},
+			wantBalance: nil,
 			wantError:   ErrNoRecord,
 		},
 		{
 			name:        "Non-existent ID",
 			balanceID:   2,
-			wantBalance: Balance{},
+			wantBalance: nil,
 			wantError:   ErrNoRecord,
 		},
 	}
