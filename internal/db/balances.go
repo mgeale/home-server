@@ -107,20 +107,20 @@ func (m *BalanceModel) Latest() ([]*Balance, error) {
 
 	defer rows.Close()
 
-	snippets := []*Balance{}
+	balances := []*Balance{}
 
 	for rows.Next() {
-		s := &Balance{}
-		err = rows.Scan(&s.ID, &s.Name, &s.Balance, &s.BalanceAUD, &s.PricebookID, &s.ProductID, &s.Created)
+		b := &Balance{}
+		err = rows.Scan(&b.ID, &b.Name, &b.Balance, &b.BalanceAUD, &b.PricebookID, &b.ProductID, &b.Created)
 		if err != nil {
 			return nil, err
 		}
-		snippets = append(snippets, s)
+		balances = append(balances, b)
 	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return snippets, nil
+	return balances, nil
 }

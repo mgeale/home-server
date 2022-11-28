@@ -42,6 +42,8 @@ input NewTransaction {
 }
 
 input UpdateBalance {
+  id: ID!
+  name: String!
   balance: Float!
   balanceaud: Float!
   pricebookid: Int!
@@ -49,6 +51,8 @@ input UpdateBalance {
 }
 
 input UpdateTransaction {
+  id: ID!
+  name: String!
   amount: Float!
   date: String!
   type: String!

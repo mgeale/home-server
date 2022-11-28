@@ -46,6 +46,8 @@ type Transaction struct {
 }
 
 type UpdateBalance struct {
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
 	Pricebookid int     `json:"pricebookid"`
@@ -53,6 +55,8 @@ type UpdateBalance struct {
 }
 
 type UpdateTransaction struct {
+	ID     int     `json:"id"`
+	Name   string  `json:"name"`
 	Amount float64 `json:"amount"`
 	Date   string  `json:"date"`
 	Type   string  `json:"type"`

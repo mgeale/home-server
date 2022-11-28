@@ -429,6 +429,8 @@ input NewTransaction {
 }
 
 input UpdateBalance {
+  id: ID!
+  name: String!
   balance: Float!
   balanceaud: Float!
   pricebookid: Int!
@@ -436,6 +438,8 @@ input UpdateBalance {
 }
 
 input UpdateTransaction {
+  id: ID!
+  name: String!
   amount: Float!
   date: String!
   type: String!
@@ -3881,13 +3885,29 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"balance", "balanceaud", "pricebookid", "productid"}
+	fieldsInOrder := [...]string{"id", "name", "balance", "balanceaud", "pricebookid", "productid"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "balance":
 			var err error
 
@@ -3933,13 +3953,29 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"amount", "date", "type"}
+	fieldsInOrder := [...]string{"id", "name", "amount", "date", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "amount":
 			var err error
 

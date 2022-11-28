@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -25,63 +29,63 @@ func serve(app *app.Application) error {
 	}
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", app.Config.Port),
-		Handler:      mux,
-		ErrorLog:     app.ErrorLog,
+		Addr:    fmt.Sprintf(":%d", app.Config.Port),
+		Handler: app.RecoverPanic(app.EnableCORS(app.RateLimit(mux))),
+		// ErrorLog:     app.ErrorLog,
 		TLSConfig:    tlsConfig,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	// shutdownError := make(chan error)
+	shutdownError := make(chan error)
 
-	// go func() {
-	// 	quit := make(chan os.Signal, 1)
+	go func() {
+		quit := make(chan os.Signal, 1)
 
-	// 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// 	s := <-quit
+		s := <-quit
 
-	// 	app.Logger.PrintInfo("caught signal", map[string]string{
-	// 		"signal": s.String(),
-	// 	})
+		app.Logger.PrintInfo("caught signal", map[string]string{
+			"signal": s.String(),
+		})
 
-	// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// 	defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	// 	err := srv.Shutdown(ctx)
-	// 	if err != nil {
-	// 		shutdownError <- err
-	// 	}
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+		}
 
-	// 	app.Logger.PrintInfo("completing background tasks", map[string]string{
-	// 		"addr": srv.Addr,
-	// 	})
+		app.Logger.PrintInfo("completing background tasks", map[string]string{
+			"addr": srv.Addr,
+		})
 
-	// 	app.Wg.Wait()
-	// 	shutdownError <- nil
+		app.Wg.Wait()
+		shutdownError <- nil
 
-	// }()
+	}()
 
-	// app.Logger.PrintInfo("starting server", map[string]string{
-	// 	"addr": srv.Addr,
-	// 	"env":  app.Config.Env,
-	// })
+	app.Logger.PrintInfo("starting server", map[string]string{
+		"addr": srv.Addr,
+		"env":  app.Config.Env,
+	})
 
 	err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 
-	// err = <-shutdownError
-	// if err != nil {
-	// 	return err
-	// }
+	err = <-shutdownError
+	if err != nil {
+		return err
+	}
 
-	// app.Logger.PrintInfo("stopped server", map[string]string{
-	// 	"addr": srv.Addr,
-	// })
+	app.Logger.PrintInfo("stopped server", map[string]string{
+		"addr": srv.Addr,
+	})
 
 	return nil
 }

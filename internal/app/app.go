@@ -3,29 +3,36 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
 	"sync"
 
 	"github.com/mgeale/homeserver/internal/db"
+	"github.com/mgeale/homeserver/internal/jsonlog"
 )
 
-type config struct {
+type Config struct {
 	Port int
 	Env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
+	Db   struct {
+		Dsn          string
+		MaxOpenConns int
+		MaxIdleConns int
+		MaxIdleTime  string
+	}
+	Limiter struct {
+		Rps     float64
+		Burst   int
+		Enabled bool
+	}
+	cors struct {
+		trustedOrigins []string
 	}
 }
 
 type Application struct {
-	Config   config
-	ErrorLog *log.Logger
-	InfoLog  *log.Logger
-	Models   *db.Models
-	Wg       sync.WaitGroup
+	Config Config
+	Logger *jsonlog.Logger
+	Models db.Models
+	Wg     sync.WaitGroup
 }
 
 func (app *Application) CreateBalance(ctx context.Context, balance *db.Balance) (int, error) {
@@ -47,11 +54,6 @@ func (app *Application) CreateTransaction(ctx context.Context, transaction *db.T
 }
 
 func (app *Application) UpdateBalance(ctx context.Context, balance *db.Balance) (int, error) {
-	// if b == nil || b.Name == "" || b.Balance == 0 || b.BalanceAUD == 0 || b.PricebookID == 0 || b.ProductID == 0 {
-	// 	app.clientError(w, http.StatusBadRequest)
-	// 	return
-	// }
-
 	err := app.Models.Balances.Update(balance.ID, balance.Name, balance.Balance, balance.BalanceAUD, balance.PricebookID, balance.ProductID)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRecord) {
@@ -63,19 +65,13 @@ func (app *Application) UpdateBalance(ctx context.Context, balance *db.Balance) 
 		}
 	}
 
-	return 1, nil
+	return balance.ID, nil
 }
 
 func (app *Application) UpdateTransaction(ctx context.Context, transaction *db.Transaction) (int, error) {
-	// 	if t == nil || t.Name == "" || t.Amount == 0 || t.Date == "" || t.Type == "" {
-	// 		app.clientError(w, http.StatusBadRequest)
-	// 		return
-	// 	}
-
-	int, err := app.Models.Transactions.Insert(transaction.Name, transaction.Amount, transaction.Date, transaction.Type)
+	err := app.Models.Transactions.Update(transaction.ID, transaction.Name, transaction.Amount, transaction.Date, transaction.Type)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRecord) {
-			//TODO: not found
 			return 0, err
 		} else {
 			//TODO: server errr
@@ -83,7 +79,7 @@ func (app *Application) UpdateTransaction(ctx context.Context, transaction *db.T
 		}
 	}
 
-	return int, nil
+	return transaction.ID, nil
 }
 
 func (app *Application) DeleteBalance(ctx context.Context, id int) (int, error) {

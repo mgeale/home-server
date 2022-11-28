@@ -9,68 +9,73 @@ import (
 	"github.com/mgeale/homeserver/graph/generated"
 	"github.com/mgeale/homeserver/graph/model"
 	"github.com/mgeale/homeserver/internal/db"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
 // CreateBalance is the resolver for the createBalance field.
 func (r *mutationResolver) CreateBalance(ctx context.Context, input model.NewBalance) (int, error) {
-	var b *db.Balance
-
-	b.Name = input.Name
-	b.Balance = input.Balance
-	b.BalanceAUD = input.Balanceaud
-	b.PricebookID = input.Pricebookid
-	b.ProductID = input.Productid
+	b := &db.Balance{
+		Name:        input.Name,
+		Balance:     input.Balance,
+		BalanceAUD:  input.Balanceaud,
+		PricebookID: input.Pricebookid,
+		ProductID:   input.Productid,
+	}
 
 	id, err := r.app.CreateBalance(ctx, b)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.
 func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.NewTransaction) (int, error) {
-	var t *db.Transaction
-
-	t.Name = input.Name
-	t.Amount = input.Amount
-	t.Date = input.Date
-	t.Type = input.Type
+	t := &db.Transaction{
+		Name:   input.Name,
+		Amount: input.Amount,
+		Date:   input.Date,
+		Type:   input.Type,
+	}
 
 	id, err := r.app.CreateTransaction(ctx, t)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // UpdateBalance is the resolver for the updateBalance field.
 func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (int, error) {
-	var b *db.Balance
-
-	b.Balance = input.Balance
-	b.BalanceAUD = input.Balanceaud
-	b.PricebookID = input.Pricebookid
-	b.ProductID = input.Productid
+	b := &db.Balance{
+		ID:          input.ID,
+		Name:        input.Name,
+		Balance:     input.Balance,
+		BalanceAUD:  input.Balanceaud,
+		PricebookID: input.Pricebookid,
+		ProductID:   input.Productid,
+	}
 
 	id, err := r.app.UpdateBalance(ctx, b)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
 func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (int, error) {
-	var t *db.Transaction
-
-	t.Amount = input.Amount
-	t.Date = input.Date
-	t.Type = input.Type
+	t := &db.Transaction{
+		ID:     input.ID,
+		Name:   input.Name,
+		Amount: input.Amount,
+		Date:   input.Date,
+		Type:   input.Type,
+	}
 
 	id, err := r.app.UpdateTransaction(ctx, t)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
@@ -79,7 +84,7 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.Up
 func (r *mutationResolver) DeleteBalance(ctx context.Context, id int) (int, error) {
 	_, err := r.app.DeleteBalance(ctx, id)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return 1, nil
 }
@@ -88,7 +93,7 @@ func (r *mutationResolver) DeleteBalance(ctx context.Context, id int) (int, erro
 func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (int, error) {
 	_, err := r.app.DeleteTransaction(ctx, id)
 	if err != nil {
-		return 0, err
+		return 0, gqlerror.Errorf(err.Error())
 	}
 	return 1, nil
 }
@@ -97,7 +102,7 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (int, 
 func (r *queryResolver) Balances(ctx context.Context) ([]*model.Balance, error) {
 	balances, err := r.app.GetLatestBalances()
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	result := make([]*model.Balance, len(balances))
@@ -119,7 +124,7 @@ func (r *queryResolver) Balances(ctx context.Context) ([]*model.Balance, error) 
 func (r *queryResolver) Transactions(ctx context.Context) ([]*model.Transaction, error) {
 	transactions, err := r.app.GetLatestTransactions()
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	result := make([]*model.Transaction, len(transactions))
@@ -141,7 +146,7 @@ func (r *queryResolver) Transactions(ctx context.Context) ([]*model.Transaction,
 func (r *queryResolver) BalanceByID(ctx context.Context, id int) (*model.Balance, error) {
 	b, err := r.app.Models.Balances.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	return &model.Balance{
@@ -159,7 +164,7 @@ func (r *queryResolver) BalanceByID(ctx context.Context, id int) (*model.Balance
 func (r *queryResolver) TransactionByID(ctx context.Context, id int) (*model.Transaction, error) {
 	t, err := r.app.Models.Transactions.Get(id)
 	if err != nil {
-		return nil, err
+		return nil, gqlerror.Errorf(err.Error())
 	}
 
 	return &model.Transaction{
