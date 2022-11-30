@@ -28,7 +28,7 @@ func newTestDB(t *testing.T) (*sql.DB, func()) {
 		t.Fatal(err)
 	}
 
-	script, err := os.ReadFile("./testdata/insert.sql")
+	script, err := os.ReadFile("./testdata/insert_data.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
