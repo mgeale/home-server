@@ -39,6 +39,6 @@ func (m *UserModel) Get(id int) (*db.User, error) {
 	case 1:
 		return mockUser, nil
 	default:
-		return nil, db.ErrNoRecord
+		return nil, db.ErrRecordNotFound
 	}
 }

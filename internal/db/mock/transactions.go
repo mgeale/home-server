@@ -26,7 +26,7 @@ func (m *TransactionModel) Update(id int, name string, amount float32, date, tra
 	case 1:
 		return nil
 	default:
-		return db.ErrNoRecord
+		return db.ErrRecordNotFound
 	}
 }
 
@@ -35,7 +35,7 @@ func (m *TransactionModel) Get(id int) (*db.Transaction, error) {
 	case 1:
 		return mockTransaction, nil
 	default:
-		return nil, db.ErrNoRecord
+		return nil, db.ErrRecordNotFound
 	}
 }
 

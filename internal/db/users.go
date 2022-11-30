@@ -1,21 +1,30 @@
 package db
 
 import (
+	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"log"
 	"time"
 
+	"github.com/mgeale/homeserver/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
-	ID             int
+	ID             int64
 	Name           string
 	Email          string
 	HashedPassword []byte
 	Created        time.Time
 	Active         bool
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
 type UserModel struct {
@@ -24,43 +33,94 @@ type UserModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *UserModel) Authenticate(email, password string) error {
-	var hashedPassword []byte
-	stmt := "SELECT hashed_password FROM users WHERE email = ? AND active = TRUE"
-	row := m.DB.QueryRow(stmt, email)
-	err := row.Scan(&hashedPassword)
+func Matches(hashedPassword []byte, plaintextPassword string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(plaintextPassword))
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return ErrInvalidCredentials
-		} else {
-			return err
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
 		}
 	}
 
-	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
-	if err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return ErrInvalidCredentials
-		} else {
-			return err
-		}
-	}
-
-	return nil
+	return true, nil
 }
 
-func (m *UserModel) Get(id int) (*User, error) {
-	u := &User{}
+func (m UserModel) GetByEmail(email string) (*User, error) {
+	query := `
+		SELECT id, name, email, hashed_password, created, active
+		FROM users
+		WHERE email = ?
+		`
+	var user User
 
-	stmt := `SELECT id, name, email, created, active FROM users WHERE id = ?`
-	err := m.DB.QueryRow(stmt, id).Scan(&u.ID, &u.Name, &u.Email, &u.Created, &u.Active)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.HashedPassword,
+		&user.Created,
+		&user.Active,
+	)
+
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNoRecord
-		} else {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
 			return nil, err
 		}
 	}
 
-	return u, nil
+	return &user, nil
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	query := `
+		SELECT 
+			users.id, users.name, users.email, users.hashed_password, users.created
+		FROM       users
+        INNER JOIN tokens
+			ON users.id = tokens.user_id
+        WHERE tokens.hash = ?
+			AND tokens.scope = ?
+			AND tokens.expiry > ?
+		`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.HashedPassword,
+		&user.Created,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
+func ValidatePasswordPlaintext(v *validator.Validator, password string) {
+	v.Check(password != "", "password", "must be provided")
+	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
+	v.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
 }

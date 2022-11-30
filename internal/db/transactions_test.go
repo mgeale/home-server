@@ -36,13 +36,13 @@ func TestTransactionModelGet(t *testing.T) {
 			name:            "Zero ID",
 			transactionID:   0,
 			wantTransaction: nil,
-			wantError:       ErrNoRecord,
+			wantError:       ErrRecordNotFound,
 		},
 		{
 			name:            "Non-existent ID",
-			transactionID:   2,
+			transactionID:   22222222,
 			wantTransaction: nil,
-			wantError:       ErrNoRecord,
+			wantError:       ErrRecordNotFound,
 		},
 	}
 
@@ -69,25 +69,25 @@ func TestTransactionModelGet(t *testing.T) {
 	}
 }
 
-func TestTransactionModelUpdate(t *testing.T) {
+func TestTransactionModelInsert(t *testing.T) {
 	if testing.Short() {
 		t.Skip("mysql: skipping integration test")
 	}
 
 	tests := []struct {
-		name      string
-		transID   int
-		wantError error
+		name        string
+		transaction *Transaction
+		wantError   error
 	}{
 		{
-			name:      "Valid ID",
-			transID:   1,
+			name: "Valid Transaction",
+			transaction: &Transaction{
+				Name:   "TNS-00999",
+				Amount: 111.00,
+				Date:   "2018-12-23 17:25:22",
+				Type:   "Repayment",
+			},
 			wantError: nil,
-		},
-		{
-			name:      "Non-existent ID",
-			transID:   2,
-			wantError: ErrNoRecord,
 		},
 	}
 
@@ -101,7 +101,64 @@ func TestTransactionModelUpdate(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.transID, "name", 200, "2018-12-23 17:25:22", "Repayment")
+			id, err := m.Insert(tt.name, tt.transaction.Amount, tt.transaction.Date, tt.transaction.Type)
+
+			if err != tt.wantError {
+				t.Errorf("want %v; got %s", tt.wantError, err)
+			}
+
+			if id == 0 {
+				t.Error("want valid id; got 0")
+			}
+		})
+	}
+}
+
+func TestTransactionModelUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("mysql: skipping integration test")
+	}
+
+	tests := []struct {
+		name        string
+		transaction *Transaction
+		wantError   error
+	}{
+		{
+			name: "Valid ID",
+			transaction: &Transaction{
+				ID:     1,
+				Name:   "TNS-00999",
+				Amount: 111.00,
+				Date:   "2018-12-23 17:25:22",
+				Type:   "Repayment",
+			},
+			wantError: nil,
+		},
+		{
+			name: "Non-existent ID",
+			transaction: &Transaction{
+				ID:     99999999,
+				Name:   "TNS-00999",
+				Amount: 111.00,
+				Date:   "2018-12-23 17:25:22",
+				Type:   "Repayment",
+			},
+			wantError: ErrRecordNotFound,
+		},
+	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, teardown := newTestDB(t)
+			defer teardown()
+
+			m := TransactionModel{db, infoLog, errorLog}
+
+			err := m.Update(tt.transaction.ID, tt.transaction.Name, tt.transaction.Amount, tt.transaction.Date, tt.transaction.Type)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -127,8 +184,8 @@ func TestTransactionModelDelete(t *testing.T) {
 		},
 		{
 			name:      "Non-existent ID",
-			transID:   2,
-			wantError: ErrNoRecord,
+			transID:   22222222,
+			wantError: ErrRecordNotFound,
 		},
 	}
 

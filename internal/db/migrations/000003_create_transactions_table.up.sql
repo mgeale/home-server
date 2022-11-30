@@ -6,11 +6,3 @@ CREATE TABLE IF NOT EXISTS transactions (
     type VARCHAR(100) NOT NULL,
     created DATETIME NOT NULL
 );
-
-INSERT INTO transactions (name, amount, date, type, created) VALUES (
-    'name',
-    100,
-    '2018-12-23 17:25:22',
-    'Repayment',
-    '2018-12-23 17:25:22'
-);

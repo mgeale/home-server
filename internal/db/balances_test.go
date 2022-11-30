@@ -37,13 +37,13 @@ func TestBalanceModelGet(t *testing.T) {
 			name:        "Zero ID",
 			balanceID:   0,
 			wantBalance: nil,
-			wantError:   ErrNoRecord,
+			wantError:   ErrRecordNotFound,
 		},
 		{
 			name:        "Non-existent ID",
 			balanceID:   2,
 			wantBalance: nil,
-			wantError:   ErrNoRecord,
+			wantError:   ErrRecordNotFound,
 		},
 	}
 
@@ -88,7 +88,7 @@ func TestBalanceModelUpdate(t *testing.T) {
 		{
 			name:      "Non-existent ID",
 			balanceID: 2,
-			wantError: ErrNoRecord,
+			wantError: ErrRecordNotFound,
 		},
 	}
 
@@ -129,7 +129,7 @@ func TestBalanceModelDelete(t *testing.T) {
 		{
 			name:      "Non-existent ID",
 			balanceID: 2,
-			wantError: ErrNoRecord,
+			wantError: ErrRecordNotFound,
 		},
 	}
 

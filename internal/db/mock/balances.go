@@ -27,7 +27,7 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, 
 	case 1:
 		return nil
 	default:
-		return db.ErrNoRecord
+		return db.ErrRecordNotFound
 	}
 }
 
@@ -36,7 +36,7 @@ func (m *BalanceModel) Get(id int) (*db.Balance, error) {
 	case 1:
 		return mockBalance, nil
 	default:
-		return nil, db.ErrNoRecord
+		return nil, db.ErrRecordNotFound
 	}
 }
 

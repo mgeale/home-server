@@ -8,17 +8,18 @@ import (
 )
 
 var (
-	ErrNoRecord           = errors.New("models: no matching record found")
 	ErrInvalidCredentials = errors.New("models: invalid credentials")
 	ErrDuplicateEmail     = errors.New("models: duplicate email")
+	ErrRecordNotFound     = errors.New("models: record not found")
+	ErrEditConflict       = errors.New("models: edit conflict")
 )
 
 type Models struct {
 	Balances     BalanceModel
 	Transactions TransactionModel
 	Users        UserModel
-	// Tokens      TokenModel
-	// Permissions PermissionModel
+	Tokens       TokenModel
+	Permissions  PermissionModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -40,15 +41,15 @@ func NewModels(db *sql.DB) Models {
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,
 		},
-		// Tokens: TokenModel{
-		// 	DB:       db,
-		// 	InfoLog:  infoLog,
-		// 	ErrorLog: errorLog,
-		// },
-		// Permissions: PermissionModel{
-		// 	DB:       db,
-		// 	InfoLog:  infoLog,
-		// 	ErrorLog: errorLog,
-		// },
+		Tokens: TokenModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
+		Permissions: PermissionModel{
+			DB:       db,
+			InfoLog:  infoLog,
+			ErrorLog: errorLog,
+		},
 	}
 }

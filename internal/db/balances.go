@@ -50,7 +50,7 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, 
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return ErrNoRecord
+		return ErrRecordNotFound
 	} else if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (m *BalanceModel) Get(id int) (*Balance, error) {
 	err := row.Scan(&b.ID, &b.Name, &b.Balance, &b.BalanceAUD, &b.PricebookID, &b.ProductID, &b.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNoRecord
+			return nil, ErrRecordNotFound
 		} else {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func (m *BalanceModel) Delete(id int) error {
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return ErrNoRecord
+		return ErrRecordNotFound
 	} else if err != nil {
 		return err
 	}

@@ -49,7 +49,7 @@ func (m *TransactionModel) Update(id int, name string, amount float64, date stri
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return ErrNoRecord
+		return ErrRecordNotFound
 	} else if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (m *TransactionModel) Get(id int) (*Transaction, error) {
 	err := row.Scan(&t.ID, &t.Name, &t.Amount, &t.Date, &t.Type, &t.Created)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNoRecord
+			return nil, ErrRecordNotFound
 		} else {
 			return nil, err
 		}
@@ -87,7 +87,7 @@ func (m *TransactionModel) Delete(id int) error {
 
 	n, err := result.RowsAffected()
 	if n == 0 {
-		return ErrNoRecord
+		return ErrRecordNotFound
 	} else if err != nil {
 		return err
 	}

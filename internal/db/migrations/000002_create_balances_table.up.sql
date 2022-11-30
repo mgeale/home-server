@@ -9,12 +9,3 @@ CREATE TABLE IF NOT EXISTS balances (
 );
 
 CREATE INDEX idx_balances_created ON balances(created);
-
-INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created) VALUES (
-    'BAL-0022',
-    100.89,
-    1000.01,
-    3333,
-    2222,
-    '2018-12-23 17:25:22'
-);
