@@ -1,49 +1,87 @@
 package app
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/mgeale/homeserver/internal/db"
+	"github.com/mgeale/homeserver/internal/db/mock"
+	"github.com/mgeale/homeserver/internal/jsonlog"
 )
 
-func TestSecureHeaders(t *testing.T) {
-	rr := httptest.NewRecorder()
-
-	r, err := http.NewRequest(http.MethodGet, "/", nil)
-	if err != nil {
-		t.Fatal(err)
+func TestBasicAuth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("mysql: skipping integration test")
 	}
 
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
+	tests := []struct {
+		name           string
+		userEmail      string
+		userPassword   string
+		wantStatusCode int
+	}{
+		{
+			name:           "Valid User",
+			userEmail:      "alice@example.com",
+			userPassword:   "password",
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Valid User",
+			userEmail:      "alice@example.com",
+			userPassword:   "wrongpassword",
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
+			name:           "Not-found User",
+			userEmail:      "doesntexist@example.com",
+			userPassword:   "password",
+			wantStatusCode: http.StatusNotFound,
+		},
+		{
+			name:           "Non-valid User",
+			wantStatusCode: http.StatusUnauthorized,
+		},
+	}
+
+	app := &Application{
+		Logger: jsonlog.NewLogger(os.Stdout, jsonlog.LevelInfo),
+		Config: Config{},
+		Models: db.Models{
+			Balances:     &mock.BalanceModel{},
+			Transactions: &mock.TransactionModel{},
+			Users:        &mock.UserModel{},
+			Tokens:       &mock.TokenModel{},
+			Permissions:  &mock.PermissionModel{},
+		},
+	}
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+		w.Write([]byte(user.Email))
 	})
 
-	secureHeaders(next).ServeHTTP(rr, r)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
 
-	rs := rr.Result()
+			r, err := http.NewRequest(http.MethodGet, "/", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	frameOptions := rs.Header.Get("X-Frame-Options")
-	if frameOptions != "deny" {
-		t.Errorf("want %q; got %q", "deny", frameOptions)
-	}
+			if tt.userEmail != "" {
+				r.SetBasicAuth(tt.userEmail, tt.userPassword)
+			}
 
-	xssProtection := rs.Header.Get("X-XSS-Protection")
-	if xssProtection != "1; mode=block" {
-		t.Errorf("want %q; got %q", "1; mode=block", xssProtection)
-	}
+			app.BasicAuth(handler).ServeHTTP(rr, r)
+			rs := rr.Result()
 
-	if rs.StatusCode != http.StatusOK {
-		t.Errorf("want %d; got %d", http.StatusOK, rs.StatusCode)
-	}
-
-	defer rs.Body.Close()
-	body, err := io.ReadAll(rs.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(body) != "OK" {
-		t.Errorf("want body to equal %q", "OK")
+			if rs.StatusCode != tt.wantStatusCode {
+				t.Errorf("want %d; got %d", tt.wantStatusCode, rs.StatusCode)
+			}
+		})
 	}
 }

@@ -18,11 +18,11 @@ var mockBalance = &db.Balance{
 
 type BalanceModel struct{}
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud float32, pricebook, product int) (int, error) {
+func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid int) (int, error) {
 	return 2, nil
 }
 
-func (m *BalanceModel) Update(id int, name string, balance, balanceaud float32, pricebook, product int) error {
+func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, pricebookid, productid int) error {
 	switch id {
 	case 1:
 		return nil

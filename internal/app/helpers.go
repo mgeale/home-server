@@ -1,22 +1,30 @@
 package app
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
-	"runtime/debug"
 )
 
-func (app *Application) serverError(w http.ResponseWriter, err error) {
-	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.ErrorLog.Output(2, trace)
+type envelope map[string]interface{}
 
-	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-}
+func (app *Application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
+	js, err := json.MarshalIndent(data, "", "\t")
+	if err != nil {
+		return err
+	}
 
-func (app *Application) clientError(w http.ResponseWriter, status int) {
-	http.Error(w, http.StatusText(status), status)
-}
+	js = append(js, '\n')
 
-func (app *Application) notFound(w http.ResponseWriter) {
-	app.clientError(w, http.StatusNotFound)
+	for key, value := range headers {
+		w.Header()[key] = value
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if _, err := w.Write(js); err != nil {
+		app.Logger.PrintError(err, nil)
+		return err
+	}
+
+	return nil
 }

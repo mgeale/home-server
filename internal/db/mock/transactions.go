@@ -17,11 +17,11 @@ var mockTransaction = &db.Transaction{
 
 type TransactionModel struct{}
 
-func (m *TransactionModel) Insert(name string, amount float32, date, transactionType string) (int, error) {
+func (m *TransactionModel) Insert(name string, amount float64, date, transactionType string) (int, error) {
 	return 2, nil
 }
 
-func (m *TransactionModel) Update(id int, name string, amount float32, date, transactionType string) error {
+func (m *TransactionModel) Update(id int, name string, amount float64, date, transactionType string) error {
 	switch id {
 	case 1:
 		return nil

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -28,10 +29,13 @@ func serve(app *app.Application) error {
 		CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 
+	// TODO: replace with app.Logger
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", app.Config.Port),
-		Handler: app.RecoverPanic(app.EnableCORS(app.RateLimit(mux))),
-		// ErrorLog:     app.ErrorLog,
+		Addr:         fmt.Sprintf(":%d", app.Config.Port),
+		Handler:      app.RecoverPanic(app.RateLimit(app.BasicAuth(mux))),
+		ErrorLog:     errorLog,
 		TLSConfig:    tlsConfig,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
