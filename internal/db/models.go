@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"time"
 )
 
 var (
@@ -32,12 +31,6 @@ type Models struct {
 	}
 	Users interface {
 		GetByEmail(email string) (*User, error)
-		GetForToken(tokenScope string, tokenPlaintext string) (*User, error)
-	}
-	Tokens interface {
-		DeleteAllForUser(scope string, userID int64) error
-		Insert(token *Token) error
-		New(userID int64, ttl time.Duration, scope string) (*Token, error)
 	}
 	Permissions interface {
 		AddForUser(userID int64, codes string) error
@@ -60,11 +53,6 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		Users: &UserModel{
-			DB:       db,
-			InfoLog:  infoLog,
-			ErrorLog: errorLog,
-		},
-		Tokens: &TokenModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,

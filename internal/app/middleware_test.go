@@ -53,7 +53,6 @@ func TestBasicAuth(t *testing.T) {
 			Balances:     &mock.BalanceModel{},
 			Transactions: &mock.TransactionModel{},
 			Users:        &mock.UserModel{},
-			Tokens:       &mock.TokenModel{},
 			Permissions:  &mock.PermissionModel{},
 		},
 	}
