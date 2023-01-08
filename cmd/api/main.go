@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -15,15 +16,22 @@ import (
 
 func main() {
 	var cfg app.Config
+
 	flag.IntVar(&cfg.Port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production")
-	flag.StringVar(&cfg.Db.Dsn, "db-dsn", "root:dbpass@(172.17.0.2:3306)/test_homeserver?parseTime=true", "MySQL DSN")
+
+	pw := os.Getenv("DB_PW")
+	flag.StringVar(&cfg.Db.Dsn, "db-dsn", fmt.Sprintf("web:%s@(localhost:3306)/homeserver?parseTime=true", pw), "MySQL DSN")
+
 	flag.IntVar(&cfg.Db.MaxOpenConns, "db-max-open-conns", 25, "MySQL max open connections")
 	flag.IntVar(&cfg.Db.MaxIdleConns, "db-max-idle-conns", 25, "MySQL max open idle connections")
 	flag.StringVar(&cfg.Db.MaxIdleTime, "db-max-idle-time", "15m", "MySQL max connection idle time")
+
 	flag.Float64Var(&cfg.Limiter.Rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.Limiter.Burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.Limiter.Enabled, "limiter-enabled", true, "Enable rate limiter")
+
+	flag.Parse()
 
 	logger := jsonlog.NewLogger(os.Stdout, jsonlog.LevelInfo)
 
