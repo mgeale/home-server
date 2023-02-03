@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"time"
+
+	"github.com/ido50/sqlz"
 )
 
 type Transaction struct {
@@ -57,7 +59,7 @@ func (m *TransactionModel) Update(id int, name string, amount float64, date stri
 	return nil
 }
 
-func (m *TransactionModel) Get(id int) (*Transaction, error) {
+func (m *TransactionModel) GetById(id int) (*Transaction, error) {
 	stmt := `SELECT id, name, amount, date, type, created FROM transactions
     WHERE id = ?`
 
@@ -75,6 +77,25 @@ func (m *TransactionModel) Get(id int) (*Transaction, error) {
 	}
 
 	return t, nil
+}
+
+func (m *TransactionModel) Get(query *Query) ([]*Transaction, error) {
+	if err := checkOrderQuery(query); err != nil {
+		return nil, err
+	}
+
+	stmt, err := addOptsToSelectOrdersQuery(sqlz.New(m.DB, "mysql").Select("*").From("transactions"), query)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows []*Transaction
+	err = stmt.GetAll(&rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 func (m *TransactionModel) Delete(id int) error {

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestBalanceModelGet(t *testing.T) {
+func TestBalanceModelGetById(t *testing.T) {
 	if testing.Short() {
 		t.Skip("mysql: skipping integration test")
 	}
@@ -57,7 +57,7 @@ func TestBalanceModelGet(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			balance, err := m.Get(tt.balanceID)
+			balance, err := m.GetById(tt.balanceID)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -65,6 +65,75 @@ func TestBalanceModelGet(t *testing.T) {
 
 			if !reflect.DeepEqual(balance, tt.wantBalance) {
 				t.Errorf("want %v; got %v", tt.wantBalance, balance)
+			}
+		})
+	}
+}
+
+func TestBalanceModelGet(t *testing.T) {
+	if testing.Short() {
+		t.Skip("mysql: skipping integration test")
+	}
+
+	tests := []struct {
+		name        string
+		balanceID   int
+		wantBalance *Balance
+		wantError   error
+	}{
+		{
+			name:      "Valid ID",
+			balanceID: 1,
+			wantBalance: &Balance{
+				ID:          1,
+				Name:        "BAL-0022",
+				Balance:     100.89,
+				BalanceAUD:  1000.01,
+				PricebookID: 3333,
+				ProductID:   2222,
+				Created:     time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
+			},
+			wantError: nil,
+		},
+	}
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, teardown := newTestDB(t)
+			defer teardown()
+
+			m := BalanceModel{db, infoLog, errorLog}
+
+			query := &Query{
+				Filters: []Filter{
+					{
+						Field: Field("balance"),
+						Kind:  Equal,
+						Value: 100.89,
+					},
+				},
+				Sort: Sort{
+					Field:     Field("created"),
+					Direction: Ascending,
+				},
+				Limit: 1,
+			}
+
+			balances, err := m.Get(query)
+
+			if err != tt.wantError {
+				t.Errorf("want %v; got %s", tt.wantError, err)
+			}
+
+			if len(balances) != 1 {
+				t.Errorf("want at only 1 balance")
+			}
+
+			if !reflect.DeepEqual(balances[0], tt.wantBalance) {
+				t.Errorf("want %v; got %v", tt.wantBalance, balances[0])
 			}
 		})
 	}

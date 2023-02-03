@@ -30,13 +30,17 @@ func (m *TransactionModel) Update(id int, name string, amount float64, date, tra
 	}
 }
 
-func (m *TransactionModel) Get(id int) (*db.Transaction, error) {
+func (m *TransactionModel) GetById(id int) (*db.Transaction, error) {
 	switch id {
 	case 1:
 		return mockTransaction, nil
 	default:
 		return nil, db.ErrRecordNotFound
 	}
+}
+
+func (m *TransactionModel) Get(query *db.Query) ([]*db.Transaction, error) {
+	return []*db.Transaction{mockTransaction}, nil
 }
 
 func (m *TransactionModel) Delete(id int) error {

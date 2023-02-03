@@ -99,8 +99,26 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (int, 
 }
 
 // Balances is the resolver for the balances field.
-func (r *queryResolver) Balances(ctx context.Context) ([]*model.Balance, error) {
-	balances, err := r.app.GetLatestBalances()
+func (r *queryResolver) Balances(ctx context.Context, where []*model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error) {
+	filters := make([]db.Filter, len(where))
+	for i, f := range where {
+		filters[i] = db.Filter{
+			Field: db.Field(f.Field),
+			Kind:  db.FilterKind(f.Kind),
+			Value: f.Value,
+		}
+	}
+	sort := db.Sort{
+		Field:     db.Field(orderBy.Field),
+		Direction: db.SortDirection(orderBy.Direction),
+	}
+	query := &db.Query{
+		Filters: filters,
+		Sort:    sort,
+		Limit:   uint(*limit),
+	}
+
+	balances, err := r.app.GetBalances(ctx, query)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}
@@ -121,8 +139,26 @@ func (r *queryResolver) Balances(ctx context.Context) ([]*model.Balance, error) 
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context) ([]*model.Transaction, error) {
-	transactions, err := r.app.GetLatestTransactions()
+func (r *queryResolver) Transactions(ctx context.Context, where []*model.TransactionFilter, orderBy model.TransactionSort, limit *int) ([]*model.Transaction, error) {
+	filters := make([]db.Filter, len(where))
+	for i, f := range where {
+		filters[i] = db.Filter{
+			Field: db.Field(f.Field),
+			Kind:  db.FilterKind(f.Kind),
+			Value: f.Value,
+		}
+	}
+	sort := db.Sort{
+		Field:     db.Field(orderBy.Field),
+		Direction: db.SortDirection(orderBy.Direction),
+	}
+	query := &db.Query{
+		Filters: filters,
+		Sort:    sort,
+		Limit:   uint(*limit),
+	}
+
+	transactions, err := r.app.GetTransactions(ctx, query)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}
@@ -144,7 +180,7 @@ func (r *queryResolver) Transactions(ctx context.Context) ([]*model.Transaction,
 
 // BalanceByID is the resolver for the balanceById field.
 func (r *queryResolver) BalanceByID(ctx context.Context, id int) (*model.Balance, error) {
-	b, err := r.app.Models.Balances.Get(id)
+	b, err := r.app.Models.Balances.GetById(id)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}
@@ -162,7 +198,7 @@ func (r *queryResolver) BalanceByID(ctx context.Context, id int) (*model.Balance
 
 // TransactionByID is the resolver for the transactionById field.
 func (r *queryResolver) TransactionByID(ctx context.Context, id int) (*model.Transaction, error) {
-	t, err := r.app.Models.Transactions.Get(id)
+	t, err := r.app.Models.Transactions.GetById(id)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}

@@ -92,8 +92,26 @@ func (app *Application) GetLatestBalances() ([]*db.Balance, error) {
 	return b, nil
 }
 
+func (app *Application) GetBalances(ctx context.Context, query *db.Query) ([]*db.Balance, error) {
+	b, err := app.Models.Balances.Get(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
 func (app *Application) GetLatestTransactions() ([]*db.Transaction, error) {
 	b, err := app.Models.Transactions.Latest()
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+func (app *Application) GetTransactions(ctx context.Context, query *db.Query) ([]*db.Transaction, error) {
+	b, err := app.Models.Transactions.Get(query)
 	if err != nil {
 		return nil, err
 	}

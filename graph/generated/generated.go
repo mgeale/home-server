@@ -65,9 +65,9 @@ type ComplexityRoot struct {
 
 	Query struct {
 		BalanceByID     func(childComplexity int, id int) int
-		Balances        func(childComplexity int) int
+		Balances        func(childComplexity int, where []*model.BalanceFilter, orderBy model.BalanceSort, limit *int) int
 		TransactionByID func(childComplexity int, id int) int
-		Transactions    func(childComplexity int) int
+		Transactions    func(childComplexity int, where []*model.TransactionFilter, orderBy model.TransactionSort, limit *int) int
 	}
 
 	Transaction struct {
@@ -89,8 +89,8 @@ type MutationResolver interface {
 	DeleteTransaction(ctx context.Context, id int) (int, error)
 }
 type QueryResolver interface {
-	Balances(ctx context.Context) ([]*model.Balance, error)
-	Transactions(ctx context.Context) ([]*model.Transaction, error)
+	Balances(ctx context.Context, where []*model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error)
+	Transactions(ctx context.Context, where []*model.TransactionFilter, orderBy model.TransactionSort, limit *int) ([]*model.Transaction, error)
 	BalanceByID(ctx context.Context, id int) (*model.Balance, error)
 	TransactionByID(ctx context.Context, id int) (*model.Transaction, error)
 }
@@ -248,7 +248,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Balances(childComplexity), true
+		args, err := ec.field_Query_balances_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Balances(childComplexity, args["where"].([]*model.BalanceFilter), args["orderBy"].(model.BalanceSort), args["limit"].(*int)), true
 
 	case "Query.transactionById":
 		if e.complexity.Query.TransactionByID == nil {
@@ -267,7 +272,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Transactions(childComplexity), true
+		args, err := ec.field_Query_transactions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Transactions(childComplexity, args["where"].([]*model.TransactionFilter), args["orderBy"].(model.TransactionSort), args["limit"].(*int)), true
 
 	case "Transaction.amount":
 		if e.complexity.Transaction.Amount == nil {
@@ -319,10 +329,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputBalanceFilter,
+		ec.unmarshalInputBalanceSort,
 		ec.unmarshalInputLogin,
 		ec.unmarshalInputNewBalance,
 		ec.unmarshalInputNewTransaction,
 		ec.unmarshalInputRefreshTokenInput,
+		ec.unmarshalInputTransactionFilter,
+		ec.unmarshalInputTransactionSort,
 		ec.unmarshalInputUpdateBalance,
 		ec.unmarshalInputUpdateTransaction,
 	)
@@ -445,9 +459,73 @@ input UpdateTransaction {
   type: String!
 }
 
+enum FilterKind {
+  EQUAL
+  NOT_EQUAL
+  GREATER
+  GREATER_OR_EQUAL
+  LESS
+  LESS_OR_EQUAL
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum BalanceField {
+  id
+  name
+  balance
+  balanceaud
+  pricebookid
+  productid
+  created
+}
+
+input BalanceFilter {
+  field: BalanceField!
+  kind: FilterKind!
+  value: String!
+}
+
+input BalanceSort {
+  field: BalanceField!
+  direction: SortDirection!
+}
+
+enum TransactionField {
+  id
+  name
+  balance
+  balanceaud
+  pricebookid
+  productid
+  created
+}
+
+input TransactionFilter {
+  field: TransactionField!
+  kind: FilterKind!
+  value: String!
+}
+
+input TransactionSort {
+  field: TransactionField!
+  direction: SortDirection!
+}
+
 type Query {
-  balances: [Balance!]!
-  transactions: [Transaction!]!
+  balances(
+    where: [BalanceFilter!] = []
+    orderBy: BalanceSort! = { field: created, direction: DESC }
+    limit: Int = 20
+  ): [Balance!]!
+  transactions(
+    where: [TransactionFilter!] = []
+    orderBy: TransactionSort! = { field: created, direction: DESC }
+    limit: Int = 20
+  ): [Transaction!]!
   balanceById(id: ID!): Balance!
   transactionById(id: ID!): Transaction!
 }
@@ -587,6 +665,39 @@ func (ec *executionContext) field_Query_balanceById_args(ctx context.Context, ra
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_balances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.BalanceFilter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg0, err = ec.unmarshalOBalanceFilter2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceFilterᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg0
+	var arg1 model.BalanceSort
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg1, err = ec.unmarshalNBalanceSort2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceSort(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_transactionById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -599,6 +710,39 @@ func (ec *executionContext) field_Query_transactionById_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_transactions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.TransactionFilter
+	if tmp, ok := rawArgs["where"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
+		arg0, err = ec.unmarshalOTransactionFilter2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionFilterᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["where"] = arg0
+	var arg1 model.TransactionSort
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
+		arg1, err = ec.unmarshalNTransactionSort2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionSort(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -1292,7 +1436,7 @@ func (ec *executionContext) _Query_balances(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Balances(rctx)
+		return ec.resolvers.Query().Balances(rctx, fc.Args["where"].([]*model.BalanceFilter), fc.Args["orderBy"].(model.BalanceSort), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1335,6 +1479,17 @@ func (ec *executionContext) fieldContext_Query_balances(ctx context.Context, fie
 			return nil, fmt.Errorf("no field named %q was found under type Balance", field.Name)
 		},
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_balances_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
 	return fc, nil
 }
 
@@ -1352,7 +1507,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Transactions(rctx)
+		return ec.resolvers.Query().Transactions(rctx, fc.Args["where"].([]*model.TransactionFilter), fc.Args["orderBy"].(model.TransactionSort), fc.Args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1392,6 +1547,17 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_transactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -3702,6 +3868,86 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBalanceFilter(ctx context.Context, obj interface{}) (model.BalanceFilter, error) {
+	var it model.BalanceFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"field", "kind", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalNBalanceField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "kind":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kind"))
+			it.Kind, err = ec.unmarshalNFilterKind2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐFilterKind(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputBalanceSort(ctx context.Context, obj interface{}) (model.BalanceSort, error) {
+	var it model.BalanceSort
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"field", "direction"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalNBalanceField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "direction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			it.Direction, err = ec.unmarshalNSortDirection2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐSortDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interface{}) (model.Login, error) {
 	var it model.Login
 	asMap := map[string]interface{}{}
@@ -3869,6 +4115,86 @@ func (ec *executionContext) unmarshalInputRefreshTokenInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("token"))
 			it.Token, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTransactionFilter(ctx context.Context, obj interface{}) (model.TransactionFilter, error) {
+	var it model.TransactionFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"field", "kind", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalNTransactionField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "kind":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("kind"))
+			it.Kind, err = ec.unmarshalNFilterKind2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐFilterKind(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTransactionSort(ctx context.Context, obj interface{}) (model.TransactionSort, error) {
+	var it model.TransactionSort
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"field", "direction"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalNTransactionField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionField(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "direction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			it.Direction, err = ec.unmarshalNSortDirection2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐSortDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4741,6 +5067,26 @@ func (ec *executionContext) marshalNBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserve
 	return ec._Balance(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNBalanceField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceField(ctx context.Context, v interface{}) (model.BalanceField, error) {
+	var res model.BalanceField
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBalanceField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceField(ctx context.Context, sel ast.SelectionSet, v model.BalanceField) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNBalanceFilter2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceFilter(ctx context.Context, v interface{}) (*model.BalanceFilter, error) {
+	res, err := ec.unmarshalInputBalanceFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNBalanceSort2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceSort(ctx context.Context, v interface{}) (model.BalanceSort, error) {
+	res, err := ec.unmarshalInputBalanceSort(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4754,6 +5100,16 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNFilterKind2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐFilterKind(ctx context.Context, v interface{}) (model.FilterKind, error) {
+	var res model.FilterKind
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFilterKind2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐFilterKind(ctx context.Context, sel ast.SelectionSet, v model.FilterKind) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -4809,6 +5165,16 @@ func (ec *executionContext) unmarshalNNewBalance2githubᚗcomᚋmgealeᚋhomeser
 func (ec *executionContext) unmarshalNNewTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewTransaction(ctx context.Context, v interface{}) (model.NewTransaction, error) {
 	res, err := ec.unmarshalInputNewTransaction(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSortDirection2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐSortDirection(ctx context.Context, v interface{}) (model.SortDirection, error) {
+	var res model.SortDirection
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSortDirection2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐSortDirection(ctx context.Context, sel ast.SelectionSet, v model.SortDirection) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -4882,6 +5248,26 @@ func (ec *executionContext) marshalNTransaction2ᚖgithubᚗcomᚋmgealeᚋhomes
 		return graphql.Null
 	}
 	return ec._Transaction(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTransactionField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionField(ctx context.Context, v interface{}) (model.TransactionField, error) {
+	var res model.TransactionField
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTransactionField2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionField(ctx context.Context, sel ast.SelectionSet, v model.TransactionField) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNTransactionFilter2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionFilter(ctx context.Context, v interface{}) (*model.TransactionFilter, error) {
+	res, err := ec.unmarshalInputTransactionFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNTransactionSort2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionSort(ctx context.Context, v interface{}) (model.TransactionSort, error) {
+	res, err := ec.unmarshalInputTransactionSort(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalance(ctx context.Context, v interface{}) (model.UpdateBalance, error) {
@@ -5147,6 +5533,26 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalOBalanceFilter2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceFilterᚄ(ctx context.Context, v interface{}) ([]*model.BalanceFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.BalanceFilter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNBalanceFilter2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5173,6 +5579,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -5187,6 +5609,26 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTransactionFilter2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionFilterᚄ(ctx context.Context, v interface{}) ([]*model.TransactionFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.TransactionFilter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNTransactionFilter2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

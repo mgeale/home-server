@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"time"
+
+	"github.com/ido50/sqlz"
 )
 
 type Balance struct {
@@ -58,7 +60,7 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, 
 	return nil
 }
 
-func (m *BalanceModel) Get(id int) (*Balance, error) {
+func (m *BalanceModel) GetById(id int) (*Balance, error) {
 	stmt := `SELECT id, name, balance, balanceaud, pricebookid, productid, created FROM balances
     WHERE id = ?`
 
@@ -76,6 +78,25 @@ func (m *BalanceModel) Get(id int) (*Balance, error) {
 	}
 
 	return b, nil
+}
+
+func (m *BalanceModel) Get(query *Query) ([]*Balance, error) {
+	if err := checkOrderQuery(query); err != nil {
+		return nil, err
+	}
+
+	stmt, err := addOptsToSelectOrdersQuery(sqlz.New(m.DB, "mysql").Select("*").From("balances"), query)
+	if err != nil {
+		return nil, err
+	}
+
+	var rows []*Balance
+	err = stmt.GetAll(&rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 func (m *BalanceModel) Delete(id int) error {

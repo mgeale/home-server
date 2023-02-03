@@ -58,9 +58,73 @@ input UpdateTransaction {
   type: String!
 }
 
+enum FilterKind {
+  EQUAL
+  NOT_EQUAL
+  GREATER
+  GREATER_OR_EQUAL
+  LESS
+  LESS_OR_EQUAL
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+enum BalanceField {
+  id
+  name
+  balance
+  balanceaud
+  pricebookid
+  productid
+  created
+}
+
+input BalanceFilter {
+  field: BalanceField!
+  kind: FilterKind!
+  value: String!
+}
+
+input BalanceSort {
+  field: BalanceField!
+  direction: SortDirection!
+}
+
+enum TransactionField {
+  id
+  name
+  balance
+  balanceaud
+  pricebookid
+  productid
+  created
+}
+
+input TransactionFilter {
+  field: TransactionField!
+  kind: FilterKind!
+  value: String!
+}
+
+input TransactionSort {
+  field: TransactionField!
+  direction: SortDirection!
+}
+
 type Query {
-  balances: [Balance!]!
-  transactions: [Transaction!]!
+  balances(
+    where: [BalanceFilter!] = []
+    orderBy: BalanceSort! = { field: created, direction: DESC }
+    limit: Int = 20
+  ): [Balance!]!
+  transactions(
+    where: [TransactionFilter!] = []
+    orderBy: TransactionSort! = { field: created, direction: DESC }
+    limit: Int = 20
+  ): [Transaction!]!
   balanceById(id: ID!): Balance!
   transactionById(id: ID!): Transaction!
 }

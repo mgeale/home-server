@@ -31,13 +31,17 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, 
 	}
 }
 
-func (m *BalanceModel) Get(id int) (*db.Balance, error) {
+func (m *BalanceModel) GetById(id int) (*db.Balance, error) {
 	switch id {
 	case 1:
 		return mockBalance, nil
 	default:
 		return nil, db.ErrRecordNotFound
 	}
+}
+
+func (m *BalanceModel) Get(query *db.Query) ([]*db.Balance, error) {
+	return []*db.Balance{mockBalance}, nil
 }
 
 func (m *BalanceModel) Delete(id int) error {

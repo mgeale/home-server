@@ -123,7 +123,14 @@ func TestGetBalances(t *testing.T) {
 
 		c.MustPost(`
 			query GetBalances {
-				balances {
+				balances(where: {
+					field: id
+					kind: EQUAL
+					value: "2"
+				}, orderBy: {
+					field: created
+					direction: DESC
+				}) {
 					id 
 					name 
 					balance 
@@ -284,7 +291,14 @@ func TestGetTransactions(t *testing.T) {
 
 		c.MustPost(`
 			query GetTransactions {
-				transactions {
+				transactions(where: {
+					field: id
+					kind: EQUAL
+					value: "2"
+				}, orderBy: {
+					field: created
+					direction: DESC
+				}) {
 					id 
 					name 
 					amount 
