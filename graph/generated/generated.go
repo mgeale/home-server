@@ -497,10 +497,9 @@ input BalanceSort {
 enum TransactionField {
   id
   name
-  balance
-  balanceaud
-  pricebookid
-  productid
+  amount
+  date
+  type
   created
 }
 

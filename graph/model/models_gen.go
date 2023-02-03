@@ -234,28 +234,26 @@ func (e SortDirection) MarshalGQL(w io.Writer) {
 type TransactionField string
 
 const (
-	TransactionFieldID          TransactionField = "id"
-	TransactionFieldName        TransactionField = "name"
-	TransactionFieldBalance     TransactionField = "balance"
-	TransactionFieldBalanceaud  TransactionField = "balanceaud"
-	TransactionFieldPricebookid TransactionField = "pricebookid"
-	TransactionFieldProductid   TransactionField = "productid"
-	TransactionFieldCreated     TransactionField = "created"
+	TransactionFieldID      TransactionField = "id"
+	TransactionFieldName    TransactionField = "name"
+	TransactionFieldAmount  TransactionField = "amount"
+	TransactionFieldDate    TransactionField = "date"
+	TransactionFieldType    TransactionField = "type"
+	TransactionFieldCreated TransactionField = "created"
 )
 
 var AllTransactionField = []TransactionField{
 	TransactionFieldID,
 	TransactionFieldName,
-	TransactionFieldBalance,
-	TransactionFieldBalanceaud,
-	TransactionFieldPricebookid,
-	TransactionFieldProductid,
+	TransactionFieldAmount,
+	TransactionFieldDate,
+	TransactionFieldType,
 	TransactionFieldCreated,
 }
 
 func (e TransactionField) IsValid() bool {
 	switch e {
-	case TransactionFieldID, TransactionFieldName, TransactionFieldBalance, TransactionFieldBalanceaud, TransactionFieldPricebookid, TransactionFieldProductid, TransactionFieldCreated:
+	case TransactionFieldID, TransactionFieldName, TransactionFieldAmount, TransactionFieldDate, TransactionFieldType, TransactionFieldCreated:
 		return true
 	}
 	return false
