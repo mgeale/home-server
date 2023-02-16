@@ -19,9 +19,10 @@ type Balance struct {
 }
 
 type BalanceFilter struct {
-	Field BalanceField `json:"field"`
-	Kind  FilterKind   `json:"kind"`
-	Value string       `json:"value"`
+	Field      *BalanceField    `json:"field"`
+	Kind       FilterKind       `json:"kind"`
+	Value      *string          `json:"value"`
+	Subfilters []*BalanceFilter `json:"subfilters"`
 }
 
 type BalanceSort struct {
@@ -63,9 +64,10 @@ type Transaction struct {
 }
 
 type TransactionFilter struct {
-	Field TransactionField `json:"field"`
-	Kind  FilterKind       `json:"kind"`
-	Value string           `json:"value"`
+	Field      *TransactionField    `json:"field"`
+	Kind       FilterKind           `json:"kind"`
+	Value      *string              `json:"value"`
+	Subfilters []*TransactionFilter `json:"subfilters"`
 }
 
 type TransactionSort struct {
@@ -150,6 +152,9 @@ const (
 	FilterKindGreaterOrEqual FilterKind = "GREATER_OR_EQUAL"
 	FilterKindLess           FilterKind = "LESS"
 	FilterKindLessOrEqual    FilterKind = "LESS_OR_EQUAL"
+	FilterKindAnd            FilterKind = "AND_"
+	FilterKindOr             FilterKind = "OR_"
+	FilterKindNot            FilterKind = "NOT_"
 )
 
 var AllFilterKind = []FilterKind{
@@ -159,11 +164,14 @@ var AllFilterKind = []FilterKind{
 	FilterKindGreaterOrEqual,
 	FilterKindLess,
 	FilterKindLessOrEqual,
+	FilterKindAnd,
+	FilterKindOr,
+	FilterKindNot,
 }
 
 func (e FilterKind) IsValid() bool {
 	switch e {
-	case FilterKindEqual, FilterKindNotEqual, FilterKindGreater, FilterKindGreaterOrEqual, FilterKindLess, FilterKindLessOrEqual:
+	case FilterKindEqual, FilterKindNotEqual, FilterKindGreater, FilterKindGreaterOrEqual, FilterKindLess, FilterKindLessOrEqual, FilterKindAnd, FilterKindOr, FilterKindNot:
 		return true
 	}
 	return false

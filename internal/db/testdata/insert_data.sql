@@ -12,6 +12,13 @@ INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created
     3333,
     2222,
     '2018-12-23 17:25:22'
+), (
+    'BAL-0033',
+    85.12,
+    52.78,
+    3333,
+    2222,
+    '2018-12-23 17:25:22'
 );
 
 INSERT INTO transactions (name, amount, date, type, created) VALUES (

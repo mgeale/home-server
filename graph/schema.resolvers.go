@@ -8,6 +8,7 @@ import (
 
 	"github.com/mgeale/homeserver/graph/generated"
 	"github.com/mgeale/homeserver/graph/model"
+	"github.com/mgeale/homeserver/graph/types"
 	"github.com/mgeale/homeserver/internal/db"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
@@ -99,83 +100,27 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (int, 
 }
 
 // Balances is the resolver for the balances field.
-func (r *queryResolver) Balances(ctx context.Context, where []*model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error) {
-	filters := make([]db.Filter, len(where))
-	for i, f := range where {
-		filters[i] = db.Filter{
-			Field: db.Field(f.Field),
-			Kind:  db.FilterKind(f.Kind),
-			Value: f.Value,
-		}
-	}
-	sort := db.Sort{
-		Field:     db.Field(orderBy.Field),
-		Direction: db.SortDirection(orderBy.Direction),
-	}
-	query := &db.Query{
-		Filters: filters,
-		Sort:    sort,
-		Limit:   uint(*limit),
-	}
+func (r *queryResolver) Balances(ctx context.Context, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error) {
+	query := types.CreateBalanceQuery(where, orderBy, limit)
 
 	balances, err := r.app.GetBalances(ctx, query)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}
 
-	result := make([]*model.Balance, len(balances))
-	for i, b := range balances {
-		result[i] = &model.Balance{
-			ID:          b.ID,
-			Name:        b.Name,
-			Balance:     b.Balance,
-			Balanceaud:  b.BalanceAUD,
-			Pricebookid: b.PricebookID,
-			Productid:   b.ProductID,
-			Created:     b.Created.String(),
-		}
-	}
-	return result, nil
+	return types.ToBalanceModel(balances), nil
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, where []*model.TransactionFilter, orderBy model.TransactionSort, limit *int) ([]*model.Transaction, error) {
-	filters := make([]db.Filter, len(where))
-	for i, f := range where {
-		filters[i] = db.Filter{
-			Field: db.Field(f.Field),
-			Kind:  db.FilterKind(f.Kind),
-			Value: f.Value,
-		}
-	}
-	sort := db.Sort{
-		Field:     db.Field(orderBy.Field),
-		Direction: db.SortDirection(orderBy.Direction),
-	}
-	query := &db.Query{
-		Filters: filters,
-		Sort:    sort,
-		Limit:   uint(*limit),
-	}
+func (r *queryResolver) Transactions(ctx context.Context, where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) ([]*model.Transaction, error) {
+	query := types.CreateTransactionQuery(where, orderBy, limit)
 
 	transactions, err := r.app.GetTransactions(ctx, query)
 	if err != nil {
 		return nil, gqlerror.Errorf(err.Error())
 	}
 
-	result := make([]*model.Transaction, len(transactions))
-	for i, t := range transactions {
-		result[i] = &model.Transaction{
-			ID:      t.ID,
-			Name:    t.Name,
-			Amount:  t.Amount,
-			Date:    t.Date,
-			Type:    t.Type,
-			Created: t.Created.String(),
-		}
-	}
-
-	return result, nil
+	return types.ToTransactionModel(transactions), nil
 }
 
 // BalanceByID is the resolver for the balanceById field.

@@ -34,12 +34,15 @@ const (
 	LessOrEqual    FilterKind = "LESS_OR_EQUAL"
 	GreaterOrEqual FilterKind = "GREATER_OR_EQUAL"
 	Contains       FilterKind = "CONTAINS"
+	And            FilterKind = "AND_"
+	Or             FilterKind = "OR_"
+	Not            FilterKind = "NOT_"
 )
 
 type Field string
 
 type Query struct {
-	Filters []Filter
+	Filters *Filter
 	Sort    Sort
 	Limit   uint
 	Offset  uint
@@ -51,9 +54,10 @@ type Sort struct {
 }
 
 type Filter struct {
-	Field Field
-	Kind  FilterKind
-	Value interface{}
+	Field      Field
+	Kind       FilterKind
+	Value      interface{}
+	Subfilters []*Filter
 }
 
 type Models struct {
@@ -124,12 +128,10 @@ func addOptsToSelectOrdersQuery(stmt *sqlz.SelectStmt, opts *Query) (*sqlz.Selec
 	if opts.Offset != 0 {
 		stmt.Offset(int64(opts.Offset))
 	}
-	whereConditions, err := whereConditionsFromOrderFilterOpts(opts.Filters)
-	if err != nil {
-		return nil, err
-	}
-	if len(whereConditions) != 0 {
-		stmt.Where(whereConditions...)
+
+	whereConditions := whereConditionsFromOrderFilterOpts(opts.Filters)
+	if whereConditions != nil {
+		stmt.Where(whereConditions)
 	}
 
 	return stmt, nil
@@ -145,29 +147,39 @@ func orderingFromOrderSortOpts(sortOpt Sort) []sqlz.SQLStmt {
 	return ordering
 }
 
-func whereConditionsFromOrderFilterOpts(filterOpts []Filter) ([]sqlz.WhereCondition, error) {
-	whereConditions := make([]sqlz.WhereCondition, len(filterOpts))
-	for i, filterOpt := range filterOpts {
-		switch filterOpt.Kind {
-		case Equal:
-			whereConditions[i] = sqlz.Eq(string(filterOpt.Field), filterOpt.Value)
-		case NotEqual:
-			whereConditions[i] = sqlz.Not(sqlz.Eq(string(filterOpt.Field), filterOpt.Value))
-		case Less:
-			whereConditions[i] = sqlz.Lt(string(filterOpt.Field), filterOpt.Value)
-		case Greater:
-			whereConditions[i] = sqlz.Gt(string(filterOpt.Field), filterOpt.Value)
-		case LessOrEqual:
-			whereConditions[i] = sqlz.Lte(string(filterOpt.Field), filterOpt.Value)
-		case GreaterOrEqual:
-			whereConditions[i] = sqlz.Gte(string(filterOpt.Field), filterOpt.Value)
-		case Contains:
-			whereConditions[i] = sqlz.Like(string(filterOpt.Field), fmt.Sprintf("%%%s%%", filterOpt.Value))
-		default:
-			return nil, fmt.Errorf("db.FindOrder: unknown FilterOpt.Kind: %s", filterOpt.Kind)
+func whereConditionsFromOrderFilterOpts(filterOpt *Filter) sqlz.WhereCondition {
+	switch filterOpt.Kind {
+	case Equal:
+		return sqlz.Eq(string(filterOpt.Field), filterOpt.Value)
+	case NotEqual:
+		return sqlz.Not(sqlz.Eq(string(filterOpt.Field), filterOpt.Value))
+	case Less:
+		return sqlz.Lt(string(filterOpt.Field), filterOpt.Value)
+	case Greater:
+		return sqlz.Gt(string(filterOpt.Field), filterOpt.Value)
+	case LessOrEqual:
+		return sqlz.Lte(string(filterOpt.Field), filterOpt.Value)
+	case GreaterOrEqual:
+		return sqlz.Gte(string(filterOpt.Field), filterOpt.Value)
+	case Contains:
+		return sqlz.Like(string(filterOpt.Field), fmt.Sprintf("%%%s%%", filterOpt.Value))
+	case And:
+		subfilters := make([]sqlz.WhereCondition, len(filterOpt.Subfilters))
+		for i, opt := range filterOpt.Subfilters {
+			subfilters[i] = whereConditionsFromOrderFilterOpts(opt)
 		}
+		return sqlz.And(subfilters...)
+	case Or:
+		subfilters := make([]sqlz.WhereCondition, len(filterOpt.Subfilters))
+		for i, opt := range filterOpt.Subfilters {
+			subfilters[i] = whereConditionsFromOrderFilterOpts(opt)
+		}
+		return sqlz.Or(subfilters...)
+	// case Not:
+	// 	return sqlz.Not()
+	default:
+		return nil
 	}
-	return whereConditions, nil
 }
 
 func checkOrderQuery(query *Query) error {

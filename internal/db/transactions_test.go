@@ -106,12 +106,10 @@ func TestTransactionModelGet(t *testing.T) {
 			m := TransactionModel{db, infoLog, errorLog}
 
 			query := &Query{
-				Filters: []Filter{
-					{
-						Field: Field("Amount"),
-						Kind:  Equal,
-						Value: 100.00,
-					},
+				Filters: &Filter{
+					Field: Field("Amount"),
+					Kind:  Equal,
+					Value: 100.00,
 				},
 				Sort: Sort{
 					Field:     Field("created"),

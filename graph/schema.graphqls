@@ -65,6 +65,9 @@ enum FilterKind {
   GREATER_OR_EQUAL
   LESS
   LESS_OR_EQUAL
+  AND_
+  OR_
+  NOT_
 }
 
 enum SortDirection {
@@ -83,9 +86,10 @@ enum BalanceField {
 }
 
 input BalanceFilter {
-  field: BalanceField!
+  field: BalanceField
   kind: FilterKind!
-  value: String!
+  value: String
+  subfilters: [BalanceFilter!] = []
 }
 
 input BalanceSort {
@@ -103,9 +107,10 @@ enum TransactionField {
 }
 
 input TransactionFilter {
-  field: TransactionField!
+  field: TransactionField
   kind: FilterKind!
-  value: String!
+  value: String
+  subfilters: [TransactionFilter!] = []
 }
 
 input TransactionSort {
@@ -115,12 +120,12 @@ input TransactionSort {
 
 type Query {
   balances(
-    where: [BalanceFilter!] = []
+    where: BalanceFilter
     orderBy: BalanceSort! = { field: created, direction: DESC }
     limit: Int = 20
   ): [Balance!]!
   transactions(
-    where: [TransactionFilter!] = []
+    where: TransactionFilter
     orderBy: TransactionSort! = { field: created, direction: DESC }
     limit: Int = 20
   ): [Transaction!]!
