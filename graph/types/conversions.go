@@ -45,7 +45,12 @@ func toFilter(where *model.BalanceFilter) *db.Filter {
 		filter.Subfilters = subfilters
 		filter.Kind = db.FilterKind(where.Kind)
 	} else {
-		filter.Field = db.Field(*where.Field)
+		switch *where.Field {
+		case model.BalanceFieldExternalID:
+			filter.Field = db.Field("id")
+		default:
+			filter.Field = db.Field(*where.Field)
+		}
 		filter.Kind = db.FilterKind(where.Kind)
 		filter.Value = where.Value
 	}
@@ -62,7 +67,12 @@ func toTransactionFilter(where *model.TransactionFilter) *db.Filter {
 		filter.Subfilters = subfilters
 		filter.Kind = db.FilterKind(where.Kind)
 	} else {
-		filter.Field = db.Field(*where.Field)
+		switch *where.Field {
+		case model.TransactionFieldExternalID:
+			filter.Field = db.Field("id")
+		default:
+			filter.Field = db.Field(*where.Field)
+		}
 		filter.Kind = db.FilterKind(where.Kind)
 		filter.Value = where.Value
 	}

@@ -35,7 +35,7 @@ func TestCreateQuery(t *testing.T) {
 		result := CreateBalanceQuery(where, orderBy, &limit)
 		resultFilters := make([]*db.Filter, 2)
 		resultFilters[0] = &db.Filter{
-			Field: db.Field("ExternalId"),
+			Field: db.Field("id"),
 			Kind:  db.FilterKind("EQUALS"),
 			Value: &val,
 		}
