@@ -7,7 +7,7 @@ import (
 )
 
 var mockUser = &db.User{
-	ID:             1,
+	ID:             "1",
 	Name:           "Alice",
 	Email:          "alice@example.com",
 	HashedPassword: []byte("$2y$10$FxXOMee1z03hl4pwhaziFOTScX/bYAChmL/MTiZNU0JKJ2uXK2Q.W"),

@@ -9,12 +9,12 @@ import (
 )
 
 type Balance struct {
-	ID          int     `json:"id"`
+	ExternalID  string  `json:"ExternalId"`
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
-	Pricebookid int     `json:"pricebookid"`
-	Productid   int     `json:"productid"`
+	Pricebookid string  `json:"pricebookid"`
+	Productid   string  `json:"productid"`
 	Created     string  `json:"created"`
 }
 
@@ -39,8 +39,8 @@ type NewBalance struct {
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
-	Pricebookid int     `json:"pricebookid"`
-	Productid   int     `json:"productid"`
+	Pricebookid string  `json:"pricebookid"`
+	Productid   string  `json:"productid"`
 }
 
 type NewTransaction struct {
@@ -55,12 +55,12 @@ type RefreshTokenInput struct {
 }
 
 type Transaction struct {
-	ID      int     `json:"id"`
-	Name    string  `json:"name"`
-	Amount  float64 `json:"amount"`
-	Date    string  `json:"date"`
-	Type    string  `json:"type"`
-	Created string  `json:"created"`
+	ExternalID string  `json:"ExternalId"`
+	Name       string  `json:"name"`
+	Amount     float64 `json:"amount"`
+	Date       string  `json:"date"`
+	Type       string  `json:"type"`
+	Created    string  `json:"created"`
 }
 
 type TransactionFilter struct {
@@ -76,26 +76,26 @@ type TransactionSort struct {
 }
 
 type UpdateBalance struct {
-	ID          int     `json:"id"`
+	ExternalID  string  `json:"ExternalId"`
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
-	Pricebookid int     `json:"pricebookid"`
-	Productid   int     `json:"productid"`
+	Pricebookid string  `json:"pricebookid"`
+	Productid   string  `json:"productid"`
 }
 
 type UpdateTransaction struct {
-	ID     int     `json:"id"`
-	Name   string  `json:"name"`
-	Amount float64 `json:"amount"`
-	Date   string  `json:"date"`
-	Type   string  `json:"type"`
+	ExternalID string  `json:"ExternalId"`
+	Name       string  `json:"name"`
+	Amount     float64 `json:"amount"`
+	Date       string  `json:"date"`
+	Type       string  `json:"type"`
 }
 
 type BalanceField string
 
 const (
-	BalanceFieldID          BalanceField = "id"
+	BalanceFieldExternalID  BalanceField = "ExternalId"
 	BalanceFieldName        BalanceField = "name"
 	BalanceFieldBalance     BalanceField = "balance"
 	BalanceFieldBalanceaud  BalanceField = "balanceaud"
@@ -105,7 +105,7 @@ const (
 )
 
 var AllBalanceField = []BalanceField{
-	BalanceFieldID,
+	BalanceFieldExternalID,
 	BalanceFieldName,
 	BalanceFieldBalance,
 	BalanceFieldBalanceaud,
@@ -116,7 +116,7 @@ var AllBalanceField = []BalanceField{
 
 func (e BalanceField) IsValid() bool {
 	switch e {
-	case BalanceFieldID, BalanceFieldName, BalanceFieldBalance, BalanceFieldBalanceaud, BalanceFieldPricebookid, BalanceFieldProductid, BalanceFieldCreated:
+	case BalanceFieldExternalID, BalanceFieldName, BalanceFieldBalance, BalanceFieldBalanceaud, BalanceFieldPricebookid, BalanceFieldProductid, BalanceFieldCreated:
 		return true
 	}
 	return false
@@ -146,24 +146,26 @@ func (e BalanceField) MarshalGQL(w io.Writer) {
 type FilterKind string
 
 const (
-	FilterKindEqual          FilterKind = "EQUAL"
-	FilterKindNotEqual       FilterKind = "NOT_EQUAL"
-	FilterKindGreater        FilterKind = "GREATER"
-	FilterKindGreaterOrEqual FilterKind = "GREATER_OR_EQUAL"
-	FilterKindLess           FilterKind = "LESS"
-	FilterKindLessOrEqual    FilterKind = "LESS_OR_EQUAL"
-	FilterKindAnd            FilterKind = "AND_"
-	FilterKindOr             FilterKind = "OR_"
-	FilterKindNot            FilterKind = "NOT_"
+	FilterKindEquals               FilterKind = "EQUALS"
+	FilterKindNotEquals            FilterKind = "NOT_EQUALS"
+	FilterKindContains             FilterKind = "CONTAINS"
+	FilterKindGreaterThan          FilterKind = "GREATER_THAN"
+	FilterKindGreaterThanOrEqualTo FilterKind = "GREATER_THAN_OR_EQUAL_TO"
+	FilterKindLessThan             FilterKind = "LESS_THAN"
+	FilterKindLessThanOrEqualTo    FilterKind = "LESS_THAN_OR_EQUAL_TO"
+	FilterKindAnd                  FilterKind = "AND_"
+	FilterKindOr                   FilterKind = "OR_"
+	FilterKindNot                  FilterKind = "NOT_"
 )
 
 var AllFilterKind = []FilterKind{
-	FilterKindEqual,
-	FilterKindNotEqual,
-	FilterKindGreater,
-	FilterKindGreaterOrEqual,
-	FilterKindLess,
-	FilterKindLessOrEqual,
+	FilterKindEquals,
+	FilterKindNotEquals,
+	FilterKindContains,
+	FilterKindGreaterThan,
+	FilterKindGreaterThanOrEqualTo,
+	FilterKindLessThan,
+	FilterKindLessThanOrEqualTo,
 	FilterKindAnd,
 	FilterKindOr,
 	FilterKindNot,
@@ -171,7 +173,7 @@ var AllFilterKind = []FilterKind{
 
 func (e FilterKind) IsValid() bool {
 	switch e {
-	case FilterKindEqual, FilterKindNotEqual, FilterKindGreater, FilterKindGreaterOrEqual, FilterKindLess, FilterKindLessOrEqual, FilterKindAnd, FilterKindOr, FilterKindNot:
+	case FilterKindEquals, FilterKindNotEquals, FilterKindContains, FilterKindGreaterThan, FilterKindGreaterThanOrEqualTo, FilterKindLessThan, FilterKindLessThanOrEqualTo, FilterKindAnd, FilterKindOr, FilterKindNot:
 		return true
 	}
 	return false
@@ -242,16 +244,16 @@ func (e SortDirection) MarshalGQL(w io.Writer) {
 type TransactionField string
 
 const (
-	TransactionFieldID      TransactionField = "id"
-	TransactionFieldName    TransactionField = "name"
-	TransactionFieldAmount  TransactionField = "amount"
-	TransactionFieldDate    TransactionField = "date"
-	TransactionFieldType    TransactionField = "type"
-	TransactionFieldCreated TransactionField = "created"
+	TransactionFieldExternalID TransactionField = "ExternalId"
+	TransactionFieldName       TransactionField = "name"
+	TransactionFieldAmount     TransactionField = "amount"
+	TransactionFieldDate       TransactionField = "date"
+	TransactionFieldType       TransactionField = "type"
+	TransactionFieldCreated    TransactionField = "created"
 )
 
 var AllTransactionField = []TransactionField{
-	TransactionFieldID,
+	TransactionFieldExternalID,
 	TransactionFieldName,
 	TransactionFieldAmount,
 	TransactionFieldDate,
@@ -261,7 +263,7 @@ var AllTransactionField = []TransactionField{
 
 func (e TransactionField) IsValid() bool {
 	switch e {
-	case TransactionFieldID, TransactionFieldName, TransactionFieldAmount, TransactionFieldDate, TransactionFieldType, TransactionFieldCreated:
+	case TransactionFieldExternalID, TransactionFieldName, TransactionFieldAmount, TransactionFieldDate, TransactionFieldType, TransactionFieldCreated:
 		return true
 	}
 	return false

@@ -1,15 +1,15 @@
 type Balance {
-  id: ID!
+  ExternalId: String!
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
   created: String!
 }
 
 type Transaction {
-  id: ID!
+  ExternalId: String!
   name: String!
   amount: Float!
   date: String!
@@ -30,8 +30,8 @@ input NewBalance {
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
 }
 
 input NewTransaction {
@@ -42,16 +42,16 @@ input NewTransaction {
 }
 
 input UpdateBalance {
-  id: ID!
+  ExternalId: String!
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
 }
 
 input UpdateTransaction {
-  id: ID!
+  ExternalId: String!
   name: String!
   amount: Float!
   date: String!
@@ -59,12 +59,13 @@ input UpdateTransaction {
 }
 
 enum FilterKind {
-  EQUAL
-  NOT_EQUAL
-  GREATER
-  GREATER_OR_EQUAL
-  LESS
-  LESS_OR_EQUAL
+  EQUALS
+  NOT_EQUALS
+  CONTAINS
+  GREATER_THAN
+  GREATER_THAN_OR_EQUAL_TO
+  LESS_THAN
+  LESS_THAN_OR_EQUAL_TO
   AND_
   OR_
   NOT_
@@ -76,7 +77,7 @@ enum SortDirection {
 }
 
 enum BalanceField {
-  id
+  ExternalId
   name
   balance
   balanceaud
@@ -98,7 +99,7 @@ input BalanceSort {
 }
 
 enum TransactionField {
-  id
+  ExternalId
   name
   amount
   date
@@ -129,15 +130,13 @@ type Query {
     orderBy: TransactionSort! = { field: created, direction: DESC }
     limit: Int = 20
   ): [Transaction!]!
-  balanceById(id: ID!): Balance!
-  transactionById(id: ID!): Transaction!
 }
 
 type Mutation {
-  createBalance(input: NewBalance!): Int!
-  createTransaction(input: NewTransaction!): Int!
-  updateBalance(input: UpdateBalance!): Int!
-  updateTransaction(input: UpdateTransaction!): Int!
-  deleteBalance(id: ID!): Int!
-  deleteTransaction(id: ID!): Int!
+  createBalance(input: NewBalance!): String!
+  createTransaction(input: NewTransaction!): String!
+  updateBalance(input: UpdateBalance!): String!
+  updateTransaction(input: UpdateTransaction!): String!
+  deleteBalance(id: String!): String!
+  deleteTransaction(id: String!): String!
 }

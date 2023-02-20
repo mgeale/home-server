@@ -21,7 +21,6 @@ func TestUserModelGetByEmail(t *testing.T) {
 			name:      "Valid Email",
 			userEmail: "alice@example.com",
 			wantUser: &User{
-				ID:     1,
 				Name:   "Alice Jones",
 				Email:  "alice@example.com",
 				Active: true,
@@ -53,10 +52,6 @@ func TestUserModelGetByEmail(t *testing.T) {
 			}
 
 			if user != nil {
-				if tt.wantUser.ID != user.ID {
-					t.Errorf("want %v; got %v", tt.wantUser.ID, user.ID)
-				}
-
 				if tt.wantUser.Email != user.Email {
 					t.Errorf("want %v; got %v", tt.wantUser.Email, user.Email)
 				}

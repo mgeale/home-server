@@ -73,7 +73,7 @@ func ToBalanceModel(balances []*db.Balance) []*model.Balance {
 	result := make([]*model.Balance, len(balances))
 	for i, b := range balances {
 		result[i] = &model.Balance{
-			ID:          b.ID,
+			ExternalID:  b.ID,
 			Name:        b.Name,
 			Balance:     b.Balance,
 			Balanceaud:  b.BalanceAUD,
@@ -89,12 +89,12 @@ func ToTransactionModel(transactions []*db.Transaction) []*model.Transaction {
 	result := make([]*model.Transaction, len(transactions))
 	for i, t := range transactions {
 		result[i] = &model.Transaction{
-			ID:      t.ID,
-			Name:    t.Name,
-			Amount:  t.Amount,
-			Date:    t.Date,
-			Type:    t.Type,
-			Created: t.Created.String(),
+			ExternalID: t.ID,
+			Name:       t.Name,
+			Amount:     t.Amount,
+			Date:       t.Date,
+			Type:       t.Type,
+			Created:    t.Created.String(),
 		}
 	}
 	return result

@@ -3,47 +3,31 @@ package db
 import (
 	"log"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 )
 
-func TestBalanceModelGetById(t *testing.T) {
+func TestBalanceModelInsert(t *testing.T) {
 	if testing.Short() {
 		t.Skip("mysql: skipping integration test")
 	}
 
 	tests := []struct {
-		name        string
-		balanceID   int
-		wantBalance *Balance
-		wantError   error
+		name      string
+		balance   *Balance
+		wantError error
 	}{
 		{
-			name:      "Valid ID",
-			balanceID: 1,
-			wantBalance: &Balance{
-				ID:          1,
-				Name:        "BAL-0022",
-				Balance:     100.89,
-				BalanceAUD:  1000.01,
-				PricebookID: 3333,
-				ProductID:   2222,
+			name: "Valid ID",
+			balance: &Balance{
+				Name:        "BAL-7878",
+				Balance:     45.13,
+				BalanceAUD:  1056.72,
+				PricebookID: "01s9D000001lX8rQAE",
+				ProductID:   "01t9D000003rsQoQAI",
 				Created:     time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
 			},
 			wantError: nil,
-		},
-		{
-			name:        "Zero ID",
-			balanceID:   0,
-			wantBalance: nil,
-			wantError:   ErrRecordNotFound,
-		},
-		{
-			name:        "Non-existent ID",
-			balanceID:   9999999,
-			wantBalance: nil,
-			wantError:   ErrRecordNotFound,
 		},
 	}
 
@@ -57,14 +41,10 @@ func TestBalanceModelGetById(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			balance, err := m.GetById(tt.balanceID)
+			_, err := m.Insert(tt.balance.Name, tt.balance.Balance, tt.balance.BalanceAUD, tt.balance.PricebookID, tt.balance.ProductID)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
-			}
-
-			if !reflect.DeepEqual(balance, tt.wantBalance) {
-				t.Errorf("want %v; got %v", tt.wantBalance, balance)
 			}
 		})
 	}
@@ -116,7 +96,7 @@ func TestBalanceModelGet(t *testing.T) {
 						{
 							Field: Field("id"),
 							Kind:  Equal,
-							Value: 2,
+							Value: "7a59f5c1-b0b9-11ed-a356-0242ac110002",
 						},
 					},
 					Kind: Or,
@@ -151,17 +131,17 @@ func TestBalanceModelUpdate(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		balanceID int
+		balanceID string
 		wantError error
 	}{
 		{
 			name:      "Valid ID",
-			balanceID: 1,
+			balanceID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
 			wantError: nil,
 		},
 		{
 			name:      "Non-existent ID",
-			balanceID: 9999999,
+			balanceID: "9999999",
 			wantError: ErrRecordNotFound,
 		},
 	}
@@ -176,7 +156,7 @@ func TestBalanceModelUpdate(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.balanceID, "BAL-0022", 200, 2000, 3333, 2222)
+			err := m.Update(tt.balanceID, "BAL-0022", 200, 2000, "3333", "2222")
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -192,17 +172,17 @@ func TestBalanceModelDelete(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		balanceID int
+		balanceID string
 		wantError error
 	}{
 		{
 			name:      "Valid ID",
-			balanceID: 1,
+			balanceID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
 			wantError: nil,
 		},
 		{
 			name:      "Non-existent ID",
-			balanceID: 9999999,
+			balanceID: "9999999",
 			wantError: ErrRecordNotFound,
 		},
 	}

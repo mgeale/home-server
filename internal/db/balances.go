@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,12 +10,12 @@ import (
 )
 
 type Balance struct {
-	ID          int
+	ID          string
 	Name        string
 	Balance     float64
 	BalanceAUD  float64
-	PricebookID int
-	ProductID   int
+	PricebookID string
+	ProductID   string
 	Created     time.Time
 }
 
@@ -25,27 +25,36 @@ type BalanceModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid int) (int, error) {
-	stmt := `INSERT INTO balances (name, balance, balanceaud, pricebookid, productid, created)
-    VALUES(?, ?, ?, ?, ?, UTC_TIMESTAMP())`
+func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid string) (string, error) {
+	stmt := sqlz.New(m.DB, "mysql").
+		InsertInto("balances").
+		Columns("id", "name", "balance", "balanceaud", "pricebookid", "productid", "created").
+		Values(sqlz.Indirect("UUID()"), name, balance, balanceaud, pricebookid, productid, sqlz.Indirect("UTC_TIMESTAMP()"))
 
-	result, err := m.DB.Exec(stmt, name, balance, balanceaud, pricebookid, productid)
+	result, err := stmt.Exec()
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
-	return int(id), nil
+	return fmt.Sprint(id), nil
 }
 
-func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, pricebookid, productid int) error {
-	stmt := `UPDATE balances SET name = ?, balance = ?, balanceaud = ?, pricebookid = ?, productid = ? WHERE id = ?`
+func (m *BalanceModel) Update(id, name string, balance, balanceaud float64, pricebookid, productid string) error {
+	stmt := sqlz.New(m.DB, "mysql").
+		Update("balances").
+		Set("name", name).
+		Set("balance", balance).
+		Set("balanceaud", balanceaud).
+		Set("pricebookid", pricebookid).
+		Set("productid", productid).
+		Where(sqlz.Eq("id", id))
 
-	result, err := m.DB.Exec(stmt, name, balance, balanceaud, pricebookid, productid, id)
+	result, err := stmt.Exec()
 	if err != nil {
 		return err
 	}
@@ -58,26 +67,6 @@ func (m *BalanceModel) Update(id int, name string, balance, balanceaud float64, 
 	}
 
 	return nil
-}
-
-func (m *BalanceModel) GetById(id int) (*Balance, error) {
-	stmt := `SELECT id, name, balance, balanceaud, pricebookid, productid, created FROM balances
-    WHERE id = ?`
-
-	row := m.DB.QueryRow(stmt, id)
-
-	b := &Balance{}
-
-	err := row.Scan(&b.ID, &b.Name, &b.Balance, &b.BalanceAUD, &b.PricebookID, &b.ProductID, &b.Created)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrRecordNotFound
-		} else {
-			return nil, err
-		}
-	}
-
-	return b, nil
 }
 
 func (m *BalanceModel) Get(query *Query) ([]*Balance, error) {
@@ -99,10 +88,12 @@ func (m *BalanceModel) Get(query *Query) ([]*Balance, error) {
 	return rows, nil
 }
 
-func (m *BalanceModel) Delete(id int) error {
-	stmt := `DELETE FROM balances WHERE id = ?`
+func (m *BalanceModel) Delete(id string) error {
+	stmt := sqlz.New(m.DB, "mysql").
+		DeleteFrom("balances").
+		Where(sqlz.Eq("id", id))
 
-	result, err := m.DB.Exec(stmt, id)
+	result, err := stmt.Exec()
 	if err != nil {
 		return err
 	}
@@ -115,33 +106,4 @@ func (m *BalanceModel) Delete(id int) error {
 	}
 
 	return nil
-}
-
-func (m *BalanceModel) Latest() ([]*Balance, error) {
-	stmt := `SELECT id, name, balance, balanceaud, pricebookid, productid, created FROM balances
-    ORDER BY created DESC LIMIT 10`
-
-	rows, err := m.DB.Query(stmt)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	balances := []*Balance{}
-
-	for rows.Next() {
-		b := &Balance{}
-		err = rows.Scan(&b.ID, &b.Name, &b.Balance, &b.BalanceAUD, &b.PricebookID, &b.ProductID, &b.Created)
-		if err != nil {
-			return nil, err
-		}
-		balances = append(balances, b)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return balances, nil
 }

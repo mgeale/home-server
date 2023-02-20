@@ -7,7 +7,7 @@ import (
 )
 
 var mockTransaction = &db.Transaction{
-	ID:      1,
+	ID:      "1",
 	Name:    "BAL-0022",
 	Amount:  100,
 	Date:    "2018-12-23 17:25:22",
@@ -17,25 +17,16 @@ var mockTransaction = &db.Transaction{
 
 type TransactionModel struct{}
 
-func (m *TransactionModel) Insert(name string, amount float64, date, transactionType string) (int, error) {
-	return 2, nil
+func (m *TransactionModel) Insert(name string, amount float64, date, transactionType string) (string, error) {
+	return "2", nil
 }
 
-func (m *TransactionModel) Update(id int, name string, amount float64, date, transactionType string) error {
+func (m *TransactionModel) Update(id, name string, amount float64, date, transactionType string) error {
 	switch id {
-	case 1:
+	case "1":
 		return nil
 	default:
 		return db.ErrRecordNotFound
-	}
-}
-
-func (m *TransactionModel) GetById(id int) (*db.Transaction, error) {
-	switch id {
-	case 1:
-		return mockTransaction, nil
-	default:
-		return nil, db.ErrRecordNotFound
 	}
 }
 
@@ -43,10 +34,6 @@ func (m *TransactionModel) Get(query *db.Query) ([]*db.Transaction, error) {
 	return []*db.Transaction{mockTransaction}, nil
 }
 
-func (m *TransactionModel) Delete(id int) error {
+func (m *TransactionModel) Delete(id string) error {
 	return nil
-}
-
-func (m *TransactionModel) Latest() ([]*db.Transaction, error) {
-	return []*db.Transaction{mockTransaction}, nil
 }

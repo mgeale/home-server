@@ -14,7 +14,7 @@ import (
 )
 
 // CreateBalance is the resolver for the createBalance field.
-func (r *mutationResolver) CreateBalance(ctx context.Context, input model.NewBalance) (int, error) {
+func (r *mutationResolver) CreateBalance(ctx context.Context, input model.NewBalance) (string, error) {
 	b := &db.Balance{
 		Name:        input.Name,
 		Balance:     input.Balance,
@@ -25,13 +25,13 @@ func (r *mutationResolver) CreateBalance(ctx context.Context, input model.NewBal
 
 	id, err := r.app.CreateBalance(ctx, b)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.
-func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.NewTransaction) (int, error) {
+func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.NewTransaction) (string, error) {
 	t := &db.Transaction{
 		Name:   input.Name,
 		Amount: input.Amount,
@@ -41,15 +41,15 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Ne
 
 	id, err := r.app.CreateTransaction(ctx, t)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // UpdateBalance is the resolver for the updateBalance field.
-func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (int, error) {
+func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (string, error) {
 	b := &db.Balance{
-		ID:          input.ID,
+		ID:          input.ExternalID,
 		Name:        input.Name,
 		Balance:     input.Balance,
 		BalanceAUD:  input.Balanceaud,
@@ -59,15 +59,15 @@ func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.Update
 
 	id, err := r.app.UpdateBalance(ctx, b)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
-func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (int, error) {
+func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (string, error) {
 	t := &db.Transaction{
-		ID:     input.ID,
+		ID:     input.ExternalID,
 		Name:   input.Name,
 		Amount: input.Amount,
 		Date:   input.Date,
@@ -76,27 +76,27 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.Up
 
 	id, err := r.app.UpdateTransaction(ctx, t)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
 	return id, nil
 }
 
 // DeleteBalance is the resolver for the deleteBalance field.
-func (r *mutationResolver) DeleteBalance(ctx context.Context, id int) (int, error) {
+func (r *mutationResolver) DeleteBalance(ctx context.Context, id string) (string, error) {
 	_, err := r.app.DeleteBalance(ctx, id)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
-	return 1, nil
+	return "1", nil
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
-func (r *mutationResolver) DeleteTransaction(ctx context.Context, id int) (int, error) {
+func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (string, error) {
 	_, err := r.app.DeleteTransaction(ctx, id)
 	if err != nil {
-		return 0, gqlerror.Errorf(err.Error())
+		return "0", gqlerror.Errorf(err.Error())
 	}
-	return 1, nil
+	return "1", nil
 }
 
 // Balances is the resolver for the balances field.
@@ -121,41 +121,6 @@ func (r *queryResolver) Transactions(ctx context.Context, where *model.Transacti
 	}
 
 	return types.ToTransactionModel(transactions), nil
-}
-
-// BalanceByID is the resolver for the balanceById field.
-func (r *queryResolver) BalanceByID(ctx context.Context, id int) (*model.Balance, error) {
-	b, err := r.app.Models.Balances.GetById(id)
-	if err != nil {
-		return nil, gqlerror.Errorf(err.Error())
-	}
-
-	return &model.Balance{
-		ID:          b.ID,
-		Name:        b.Name,
-		Balance:     b.Balance,
-		Balanceaud:  b.BalanceAUD,
-		Pricebookid: b.PricebookID,
-		Productid:   b.ProductID,
-		Created:     b.Created.String(),
-	}, nil
-}
-
-// TransactionByID is the resolver for the transactionById field.
-func (r *queryResolver) TransactionByID(ctx context.Context, id int) (*model.Transaction, error) {
-	t, err := r.app.Models.Transactions.GetById(id)
-	if err != nil {
-		return nil, gqlerror.Errorf(err.Error())
-	}
-
-	return &model.Transaction{
-		ID:      t.ID,
-		Name:    t.Name,
-		Amount:  t.Amount,
-		Date:    t.Date,
-		Type:    t.Type,
-		Created: t.Created.String(),
-	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

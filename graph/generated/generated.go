@@ -48,7 +48,7 @@ type ComplexityRoot struct {
 		Balance     func(childComplexity int) int
 		Balanceaud  func(childComplexity int) int
 		Created     func(childComplexity int) int
-		ID          func(childComplexity int) int
+		ExternalID  func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Pricebookid func(childComplexity int) int
 		Productid   func(childComplexity int) int
@@ -57,42 +57,38 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateBalance     func(childComplexity int, input model.NewBalance) int
 		CreateTransaction func(childComplexity int, input model.NewTransaction) int
-		DeleteBalance     func(childComplexity int, id int) int
-		DeleteTransaction func(childComplexity int, id int) int
+		DeleteBalance     func(childComplexity int, id string) int
+		DeleteTransaction func(childComplexity int, id string) int
 		UpdateBalance     func(childComplexity int, input model.UpdateBalance) int
 		UpdateTransaction func(childComplexity int, input model.UpdateTransaction) int
 	}
 
 	Query struct {
-		BalanceByID     func(childComplexity int, id int) int
-		Balances        func(childComplexity int, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) int
-		TransactionByID func(childComplexity int, id int) int
-		Transactions    func(childComplexity int, where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) int
+		Balances     func(childComplexity int, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) int
+		Transactions func(childComplexity int, where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) int
 	}
 
 	Transaction struct {
-		Amount  func(childComplexity int) int
-		Created func(childComplexity int) int
-		Date    func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Name    func(childComplexity int) int
-		Type    func(childComplexity int) int
+		Amount     func(childComplexity int) int
+		Created    func(childComplexity int) int
+		Date       func(childComplexity int) int
+		ExternalID func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Type       func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
-	CreateBalance(ctx context.Context, input model.NewBalance) (int, error)
-	CreateTransaction(ctx context.Context, input model.NewTransaction) (int, error)
-	UpdateBalance(ctx context.Context, input model.UpdateBalance) (int, error)
-	UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (int, error)
-	DeleteBalance(ctx context.Context, id int) (int, error)
-	DeleteTransaction(ctx context.Context, id int) (int, error)
+	CreateBalance(ctx context.Context, input model.NewBalance) (string, error)
+	CreateTransaction(ctx context.Context, input model.NewTransaction) (string, error)
+	UpdateBalance(ctx context.Context, input model.UpdateBalance) (string, error)
+	UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (string, error)
+	DeleteBalance(ctx context.Context, id string) (string, error)
+	DeleteTransaction(ctx context.Context, id string) (string, error)
 }
 type QueryResolver interface {
 	Balances(ctx context.Context, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error)
 	Transactions(ctx context.Context, where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) ([]*model.Transaction, error)
-	BalanceByID(ctx context.Context, id int) (*model.Balance, error)
-	TransactionByID(ctx context.Context, id int) (*model.Transaction, error)
 }
 
 type executableSchema struct {
@@ -131,12 +127,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Balance.Created(childComplexity), true
 
-	case "Balance.id":
-		if e.complexity.Balance.ID == nil {
+	case "Balance.ExternalId":
+		if e.complexity.Balance.ExternalID == nil {
 			break
 		}
 
-		return e.complexity.Balance.ID(childComplexity), true
+		return e.complexity.Balance.ExternalID(childComplexity), true
 
 	case "Balance.name":
 		if e.complexity.Balance.Name == nil {
@@ -193,7 +189,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteBalance(childComplexity, args["id"].(int)), true
+		return e.complexity.Mutation.DeleteBalance(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteTransaction":
 		if e.complexity.Mutation.DeleteTransaction == nil {
@@ -205,7 +201,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteTransaction(childComplexity, args["id"].(int)), true
+		return e.complexity.Mutation.DeleteTransaction(childComplexity, args["id"].(string)), true
 
 	case "Mutation.updateBalance":
 		if e.complexity.Mutation.UpdateBalance == nil {
@@ -231,18 +227,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateTransaction(childComplexity, args["input"].(model.UpdateTransaction)), true
 
-	case "Query.balanceById":
-		if e.complexity.Query.BalanceByID == nil {
-			break
-		}
-
-		args, err := ec.field_Query_balanceById_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.BalanceByID(childComplexity, args["id"].(int)), true
-
 	case "Query.balances":
 		if e.complexity.Query.Balances == nil {
 			break
@@ -254,18 +238,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Balances(childComplexity, args["where"].(*model.BalanceFilter), args["orderBy"].(model.BalanceSort), args["limit"].(*int)), true
-
-	case "Query.transactionById":
-		if e.complexity.Query.TransactionByID == nil {
-			break
-		}
-
-		args, err := ec.field_Query_transactionById_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.TransactionByID(childComplexity, args["id"].(int)), true
 
 	case "Query.transactions":
 		if e.complexity.Query.Transactions == nil {
@@ -300,12 +272,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Transaction.Date(childComplexity), true
 
-	case "Transaction.id":
-		if e.complexity.Transaction.ID == nil {
+	case "Transaction.ExternalId":
+		if e.complexity.Transaction.ExternalID == nil {
 			break
 		}
 
-		return e.complexity.Transaction.ID(childComplexity), true
+		return e.complexity.Transaction.ExternalID(childComplexity), true
 
 	case "Transaction.name":
 		if e.complexity.Transaction.Name == nil {
@@ -400,17 +372,17 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `type Balance {
-  id: ID!
+  ExternalId: String!
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
   created: String!
 }
 
 type Transaction {
-  id: ID!
+  ExternalId: String!
   name: String!
   amount: Float!
   date: String!
@@ -431,8 +403,8 @@ input NewBalance {
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
 }
 
 input NewTransaction {
@@ -443,16 +415,16 @@ input NewTransaction {
 }
 
 input UpdateBalance {
-  id: ID!
+  ExternalId: String!
   name: String!
   balance: Float!
   balanceaud: Float!
-  pricebookid: Int!
-  productid: Int!
+  pricebookid: String!
+  productid: String!
 }
 
 input UpdateTransaction {
-  id: ID!
+  ExternalId: String!
   name: String!
   amount: Float!
   date: String!
@@ -460,12 +432,13 @@ input UpdateTransaction {
 }
 
 enum FilterKind {
-  EQUAL
-  NOT_EQUAL
-  GREATER
-  GREATER_OR_EQUAL
-  LESS
-  LESS_OR_EQUAL
+  EQUALS
+  NOT_EQUALS
+  CONTAINS
+  GREATER_THAN
+  GREATER_THAN_OR_EQUAL_TO
+  LESS_THAN
+  LESS_THAN_OR_EQUAL_TO
   AND_
   OR_
   NOT_
@@ -477,7 +450,7 @@ enum SortDirection {
 }
 
 enum BalanceField {
-  id
+  ExternalId
   name
   balance
   balanceaud
@@ -499,7 +472,7 @@ input BalanceSort {
 }
 
 enum TransactionField {
-  id
+  ExternalId
   name
   amount
   date
@@ -521,7 +494,7 @@ input TransactionSort {
 
 type Query {
   balances(
-    where: BalanceFilter = {}
+    where: BalanceFilter
     orderBy: BalanceSort! = { field: created, direction: DESC }
     limit: Int = 20
   ): [Balance!]!
@@ -530,17 +503,15 @@ type Query {
     orderBy: TransactionSort! = { field: created, direction: DESC }
     limit: Int = 20
   ): [Transaction!]!
-  balanceById(id: ID!): Balance!
-  transactionById(id: ID!): Transaction!
 }
 
 type Mutation {
-  createBalance(input: NewBalance!): Int!
-  createTransaction(input: NewTransaction!): Int!
-  updateBalance(input: UpdateBalance!): Int!
-  updateTransaction(input: UpdateTransaction!): Int!
-  deleteBalance(id: ID!): Int!
-  deleteTransaction(id: ID!): Int!
+  createBalance(input: NewBalance!): String!
+  createTransaction(input: NewTransaction!): String!
+  updateBalance(input: UpdateBalance!): String!
+  updateTransaction(input: UpdateTransaction!): String!
+  deleteBalance(id: String!): String!
+  deleteTransaction(id: String!): String!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -582,10 +553,10 @@ func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Co
 func (ec *executionContext) field_Mutation_deleteBalance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -597,10 +568,10 @@ func (ec *executionContext) field_Mutation_deleteBalance_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -654,21 +625,6 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_balanceById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_balances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -699,21 +655,6 @@ func (ec *executionContext) field_Query_balances_args(ctx context.Context, rawAr
 		}
 	}
 	args["limit"] = arg2
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_transactionById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
 	return args, nil
 }
 
@@ -788,8 +729,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Balance_id(ctx context.Context, field graphql.CollectedField, obj *model.Balance) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Balance_id(ctx, field)
+func (ec *executionContext) _Balance_ExternalId(ctx context.Context, field graphql.CollectedField, obj *model.Balance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Balance_ExternalId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -802,7 +743,7 @@ func (ec *executionContext) _Balance_id(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.ExternalID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -814,19 +755,19 @@ func (ec *executionContext) _Balance_id(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Balance_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Balance_ExternalId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Balance",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -990,9 +931,9 @@ func (ec *executionContext) _Balance_pricebookid(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Balance_pricebookid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1002,7 +943,7 @@ func (ec *executionContext) fieldContext_Balance_pricebookid(ctx context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1034,9 +975,9 @@ func (ec *executionContext) _Balance_productid(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Balance_productid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1046,7 +987,7 @@ func (ec *executionContext) fieldContext_Balance_productid(ctx context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1122,9 +1063,9 @@ func (ec *executionContext) _Mutation_createBalance(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1134,7 +1075,7 @@ func (ec *executionContext) fieldContext_Mutation_createBalance(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1177,9 +1118,9 @@ func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1189,7 +1130,7 @@ func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1232,9 +1173,9 @@ func (ec *executionContext) _Mutation_updateBalance(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1244,7 +1185,7 @@ func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1287,9 +1228,9 @@ func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1299,7 +1240,7 @@ func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1330,7 +1271,7 @@ func (ec *executionContext) _Mutation_deleteBalance(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteBalance(rctx, fc.Args["id"].(int))
+		return ec.resolvers.Mutation().DeleteBalance(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1342,9 +1283,9 @@ func (ec *executionContext) _Mutation_deleteBalance(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1354,7 +1295,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteBalance(ctx context.Cont
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1385,7 +1326,7 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTransaction(rctx, fc.Args["id"].(int))
+		return ec.resolvers.Mutation().DeleteTransaction(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1397,9 +1338,9 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1409,7 +1350,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -1465,8 +1406,8 @@ func (ec *executionContext) fieldContext_Query_balances(ctx context.Context, fie
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Balance_id(ctx, field)
+			case "ExternalId":
+				return ec.fieldContext_Balance_ExternalId(ctx, field)
 			case "name":
 				return ec.fieldContext_Balance_name(ctx, field)
 			case "balance":
@@ -1536,8 +1477,8 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Transaction_id(ctx, field)
+			case "ExternalId":
+				return ec.fieldContext_Transaction_ExternalId(ctx, field)
 			case "name":
 				return ec.fieldContext_Transaction_name(ctx, field)
 			case "amount":
@@ -1560,146 +1501,6 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_transactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_balanceById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_balanceById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().BalanceByID(rctx, fc.Args["id"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Balance)
-	fc.Result = res
-	return ec.marshalNBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalance(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_balanceById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Balance_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Balance_name(ctx, field)
-			case "balance":
-				return ec.fieldContext_Balance_balance(ctx, field)
-			case "balanceaud":
-				return ec.fieldContext_Balance_balanceaud(ctx, field)
-			case "pricebookid":
-				return ec.fieldContext_Balance_pricebookid(ctx, field)
-			case "productid":
-				return ec.fieldContext_Balance_productid(ctx, field)
-			case "created":
-				return ec.fieldContext_Balance_created(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Balance", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_balanceById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_transactionById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_transactionById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().TransactionByID(rctx, fc.Args["id"].(int))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Transaction)
-	fc.Result = res
-	return ec.marshalNTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransaction(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_transactionById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Transaction_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Transaction_name(ctx, field)
-			case "amount":
-				return ec.fieldContext_Transaction_amount(ctx, field)
-			case "date":
-				return ec.fieldContext_Transaction_date(ctx, field)
-			case "type":
-				return ec.fieldContext_Transaction_type(ctx, field)
-			case "created":
-				return ec.fieldContext_Transaction_created(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_transactionById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1835,8 +1636,8 @@ func (ec *executionContext) fieldContext_Query___schema(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Transaction_id(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Transaction_id(ctx, field)
+func (ec *executionContext) _Transaction_ExternalId(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Transaction_ExternalId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1849,7 +1650,7 @@ func (ec *executionContext) _Transaction_id(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.ExternalID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1861,19 +1662,19 @@ func (ec *executionContext) _Transaction_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Transaction_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Transaction_ExternalId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Transaction",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4042,7 +3843,7 @@ func (ec *executionContext) unmarshalInputNewBalance(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pricebookid"))
-			it.Pricebookid, err = ec.unmarshalNInt2int(ctx, v)
+			it.Pricebookid, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4050,7 +3851,7 @@ func (ec *executionContext) unmarshalInputNewBalance(ctx context.Context, obj in
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productid"))
-			it.Productid, err = ec.unmarshalNInt2int(ctx, v)
+			it.Productid, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4239,18 +4040,18 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "balance", "balanceaud", "pricebookid", "productid"}
+	fieldsInOrder := [...]string{"ExternalId", "name", "balance", "balanceaud", "pricebookid", "productid"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
+		case "ExternalId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNID2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ExternalId"))
+			it.ExternalID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4282,7 +4083,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pricebookid"))
-			it.Pricebookid, err = ec.unmarshalNInt2int(ctx, v)
+			it.Pricebookid, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4290,7 +4091,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productid"))
-			it.Productid, err = ec.unmarshalNInt2int(ctx, v)
+			it.Productid, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4307,18 +4108,18 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "amount", "date", "type"}
+	fieldsInOrder := [...]string{"ExternalId", "name", "amount", "date", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "id":
+		case "ExternalId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			it.ID, err = ec.unmarshalNID2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ExternalId"))
+			it.ExternalID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4378,9 +4179,9 @@ func (ec *executionContext) _Balance(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Balance")
-		case "id":
+		case "ExternalId":
 
-			out.Values[i] = ec._Balance_id(ctx, field, obj)
+			out.Values[i] = ec._Balance_ExternalId(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -4587,52 +4388,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Concurrently(i, func() graphql.Marshaler {
 				return rrm(innerCtx)
 			})
-		case "balanceById":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_balanceById(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
-		case "transactionById":
-			field := field
-
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_transactionById(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
-			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return rrm(innerCtx)
-			})
 		case "__type":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -4666,9 +4421,9 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Transaction")
-		case "id":
+		case "ExternalId":
 
-			out.Values[i] = ec._Transaction_id(ctx, field, obj)
+			out.Values[i] = ec._Transaction_ExternalId(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5037,10 +4792,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalance(ctx context.Context, sel ast.SelectionSet, v model.Balance) graphql.Marshaler {
-	return ec._Balance(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNBalance2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐBalanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Balance) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5155,36 +4906,6 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalIntID(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNID2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalIntID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNNewBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewBalance(ctx context.Context, v interface{}) (model.NewBalance, error) {
 	res, err := ec.unmarshalInputNewBalance(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5218,10 +4939,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransaction(ctx context.Context, sel ast.SelectionSet, v model.Transaction) graphql.Marshaler {
-	return ec._Transaction(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {

@@ -27,12 +27,12 @@ const (
 type FilterKind string
 
 const (
-	Equal          FilterKind = "EQUAL"
-	NotEqual       FilterKind = "NOT_EQUAL"
-	Less           FilterKind = "LESS"
-	Greater        FilterKind = "GREATER"
-	LessOrEqual    FilterKind = "LESS_OR_EQUAL"
-	GreaterOrEqual FilterKind = "GREATER_OR_EQUAL"
+	Equal          FilterKind = "EQUALS"
+	NotEqual       FilterKind = "NOT_EQUALS"
+	Less           FilterKind = "LESS_THAN"
+	Greater        FilterKind = "GREATER_THAN"
+	LessOrEqual    FilterKind = "LESS_THAN_OR_EQUAL_TO"
+	GreaterOrEqual FilterKind = "GREATER_THAN_OR_EQUAL_TO"
 	Contains       FilterKind = "CONTAINS"
 	And            FilterKind = "AND_"
 	Or             FilterKind = "OR_"
@@ -62,27 +62,19 @@ type Filter struct {
 
 type Models struct {
 	Balances interface {
-		Delete(id int) error
-		GetById(id int) (*Balance, error)
+		Delete(id string) error
 		Get(query *Query) ([]*Balance, error)
-		Insert(name string, balance float64, balanceaud float64, pricebookid int, productid int) (int, error)
-		Latest() ([]*Balance, error)
-		Update(id int, name string, balance float64, balanceaud float64, pricebookid int, productid int) error
+		Insert(name string, balance float64, balanceaud float64, pricebookid string, productid string) (string, error)
+		Update(id, name string, balance float64, balanceaud float64, pricebookid string, productid string) error
 	}
 	Transactions interface {
-		Delete(id int) error
-		GetById(id int) (*Transaction, error)
+		Delete(id string) error
 		Get(query *Query) ([]*Transaction, error)
-		Insert(name string, amount float64, date string, transactionType string) (int, error)
-		Latest() ([]*Transaction, error)
-		Update(id int, name string, amount float64, date string, transactionType string) error
+		Insert(name string, amount float64, date string, transactionType string) (string, error)
+		Update(id, name string, amount float64, date string, transactionType string) error
 	}
 	Users interface {
 		GetByEmail(email string) (*User, error)
-	}
-	Permissions interface {
-		AddForUser(userID int64, codes string) error
-		GetAllForUser(userID int64) (Permissions, error)
 	}
 }
 
@@ -101,11 +93,6 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 		Users: &UserModel{
-			DB:       db,
-			InfoLog:  infoLog,
-			ErrorLog: errorLog,
-		},
-		Permissions: &PermissionModel{
 			DB:       db,
 			InfoLog:  infoLog,
 			ErrorLog: errorLog,

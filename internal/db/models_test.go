@@ -22,7 +22,7 @@ func TestWhereConditions(t *testing.T) {
 			name: "Single",
 			filterOpts: &Filter{
 				Field: Field("id"),
-				Kind:  FilterKind("EQUAL"),
+				Kind:  FilterKind("EQUALS"),
 				Value: "2",
 			},
 			wantConditions: sqlz.Eq("id", "2"),
@@ -34,12 +34,12 @@ func TestWhereConditions(t *testing.T) {
 				Subfilters: []*Filter{
 					{
 						Field: Field("id"),
-						Kind:  FilterKind("EQUAL"),
+						Kind:  FilterKind("EQUALS"),
 						Value: "2",
 					},
 					{
 						Field: Field("id"),
-						Kind:  FilterKind("EQUAL"),
+						Kind:  FilterKind("EQUALS"),
 						Value: "3",
 					},
 				},
@@ -54,19 +54,19 @@ func TestWhereConditions(t *testing.T) {
 				Subfilters: []*Filter{
 					{
 						Field: Field("id"),
-						Kind:  FilterKind("EQUAL"),
+						Kind:  FilterKind("EQUALS"),
 						Value: "2",
 					},
 					{
 						Subfilters: []*Filter{
 							{
 								Field: Field("balance"),
-								Kind:  FilterKind("GREATER"),
+								Kind:  FilterKind("GREATER_THAN"),
 								Value: 100,
 							},
 							{
 								Field: Field("balance"),
-								Kind:  FilterKind("LESS"),
+								Kind:  FilterKind("LESS_THAN"),
 								Value: 200,
 							},
 						},
@@ -84,26 +84,26 @@ func TestWhereConditions(t *testing.T) {
 				Subfilters: []*Filter{
 					{
 						Field: Field("id"),
-						Kind:  FilterKind("EQUAL"),
+						Kind:  FilterKind("EQUALS"),
 						Value: "2",
 					},
 					{
 						Subfilters: []*Filter{
 							{
 								Field: Field("balance"),
-								Kind:  FilterKind("GREATER"),
+								Kind:  FilterKind("GREATER_THAN"),
 								Value: 100,
 							},
 							{
 								Subfilters: []*Filter{
 									{
 										Field: Field("balanceaud"),
-										Kind:  FilterKind("GREATER_OR_EQUAL"),
+										Kind:  FilterKind("GREATER_THAN_OR_EQUAL_TO"),
 										Value: 250,
 									},
 									{
 										Field: Field("balanceaud"),
-										Kind:  FilterKind("LESS_OR_EQUAL"),
+										Kind:  FilterKind("LESS_THAN_OR_EQUAL_TO"),
 										Value: 500,
 									},
 								},

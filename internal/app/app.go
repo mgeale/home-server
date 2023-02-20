@@ -31,78 +31,60 @@ type Application struct {
 	Wg     sync.WaitGroup
 }
 
-func (app *Application) CreateBalance(ctx context.Context, balance *db.Balance) (int, error) {
-	int, err := app.Models.Balances.Insert(balance.Name, balance.Balance, balance.BalanceAUD, balance.PricebookID, balance.ProductID)
+func (app *Application) CreateBalance(ctx context.Context, balance *db.Balance) (string, error) {
+	id, err := app.Models.Balances.Insert(balance.Name, balance.Balance, balance.BalanceAUD, balance.PricebookID, balance.ProductID)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
-	return int, nil
+	return id, nil
 }
 
-func (app *Application) CreateTransaction(ctx context.Context, transaction *db.Transaction) (int, error) {
-	int, err := app.Models.Transactions.Insert(transaction.Name, transaction.Amount, transaction.Date, transaction.Type)
+func (app *Application) CreateTransaction(ctx context.Context, transaction *db.Transaction) (string, error) {
+	id, err := app.Models.Transactions.Insert(transaction.Name, transaction.Amount, transaction.Date, transaction.Type)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
-	return int, nil
+	return id, nil
 }
 
-func (app *Application) UpdateBalance(ctx context.Context, balance *db.Balance) (int, error) {
+func (app *Application) UpdateBalance(ctx context.Context, balance *db.Balance) (string, error) {
 	err := app.Models.Balances.Update(balance.ID, balance.Name, balance.Balance, balance.BalanceAUD, balance.PricebookID, balance.ProductID)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
 	return balance.ID, nil
 }
 
-func (app *Application) UpdateTransaction(ctx context.Context, transaction *db.Transaction) (int, error) {
+func (app *Application) UpdateTransaction(ctx context.Context, transaction *db.Transaction) (string, error) {
 	err := app.Models.Transactions.Update(transaction.ID, transaction.Name, transaction.Amount, transaction.Date, transaction.Type)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
 
 	return transaction.ID, nil
 }
 
-func (app *Application) DeleteBalance(ctx context.Context, id int) (int, error) {
+func (app *Application) DeleteBalance(ctx context.Context, id string) (string, error) {
 	err := app.Models.Balances.Delete(id)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
-	return 1, nil
+	return "1", nil
 }
 
-func (app *Application) DeleteTransaction(ctx context.Context, id int) (int, error) {
+func (app *Application) DeleteTransaction(ctx context.Context, id string) (string, error) {
 	err := app.Models.Transactions.Delete(id)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
-	return 1, nil
-}
-
-func (app *Application) GetLatestBalances() ([]*db.Balance, error) {
-	b, err := app.Models.Balances.Latest()
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
+	return "1", nil
 }
 
 func (app *Application) GetBalances(ctx context.Context, query *db.Query) ([]*db.Balance, error) {
 	b, err := app.Models.Balances.Get(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
-
-func (app *Application) GetLatestTransactions() ([]*db.Transaction, error) {
-	b, err := app.Models.Transactions.Latest()
 	if err != nil {
 		return nil, err
 	}
