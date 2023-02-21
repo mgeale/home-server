@@ -48,6 +48,7 @@ type ComplexityRoot struct {
 		Balance     func(childComplexity int) int
 		Balanceaud  func(childComplexity int) int
 		Created     func(childComplexity int) int
+		DisplayURL  func(childComplexity int) int
 		ExternalID  func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Pricebookid func(childComplexity int) int
@@ -72,6 +73,7 @@ type ComplexityRoot struct {
 		Amount     func(childComplexity int) int
 		Created    func(childComplexity int) int
 		Date       func(childComplexity int) int
+		DisplayURL func(childComplexity int) int
 		ExternalID func(childComplexity int) int
 		Name       func(childComplexity int) int
 		Type       func(childComplexity int) int
@@ -126,6 +128,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Balance.Created(childComplexity), true
+
+	case "Balance.DisplayUrl":
+		if e.complexity.Balance.DisplayURL == nil {
+			break
+		}
+
+		return e.complexity.Balance.DisplayURL(childComplexity), true
 
 	case "Balance.ExternalId":
 		if e.complexity.Balance.ExternalID == nil {
@@ -272,6 +281,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Transaction.Date(childComplexity), true
 
+	case "Transaction.DisplayUrl":
+		if e.complexity.Transaction.DisplayURL == nil {
+			break
+		}
+
+		return e.complexity.Transaction.DisplayURL(childComplexity), true
+
 	case "Transaction.ExternalId":
 		if e.complexity.Transaction.ExternalID == nil {
 			break
@@ -373,6 +389,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `type Balance {
   ExternalId: String!
+  DisplayUrl: String!
   name: String!
   balance: Float!
   balanceaud: Float!
@@ -383,6 +400,7 @@ var sources = []*ast.Source{
 
 type Transaction {
   ExternalId: String!
+  DisplayUrl: String!
   name: String!
   amount: Float!
   date: String!
@@ -416,19 +434,21 @@ input NewTransaction {
 
 input UpdateBalance {
   ExternalId: String!
-  name: String!
-  balance: Float!
-  balanceaud: Float!
-  pricebookid: String!
-  productid: String!
+  DisplayUrl: String
+  name: String
+  balance: Float
+  balanceaud: Float
+  pricebookid: String
+  productid: String
 }
 
 input UpdateTransaction {
   ExternalId: String!
-  name: String!
-  amount: Float!
-  date: String!
-  type: String!
+  DisplayUrl: String
+  name: String
+  amount: Float
+  date: String
+  type: String
 }
 
 enum FilterKind {
@@ -451,6 +471,7 @@ enum SortDirection {
 
 enum BalanceField {
   ExternalId
+  DisplayUrl
   name
   balance
   balanceaud
@@ -473,6 +494,7 @@ input BalanceSort {
 
 enum TransactionField {
   ExternalId
+  DisplayUrl
   name
   amount
   date
@@ -761,6 +783,50 @@ func (ec *executionContext) _Balance_ExternalId(ctx context.Context, field graph
 }
 
 func (ec *executionContext) fieldContext_Balance_ExternalId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Balance",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Balance_DisplayUrl(ctx context.Context, field graphql.CollectedField, obj *model.Balance) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Balance_DisplayUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Balance_DisplayUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Balance",
 		Field:      field,
@@ -1408,6 +1474,8 @@ func (ec *executionContext) fieldContext_Query_balances(ctx context.Context, fie
 			switch field.Name {
 			case "ExternalId":
 				return ec.fieldContext_Balance_ExternalId(ctx, field)
+			case "DisplayUrl":
+				return ec.fieldContext_Balance_DisplayUrl(ctx, field)
 			case "name":
 				return ec.fieldContext_Balance_name(ctx, field)
 			case "balance":
@@ -1479,6 +1547,8 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 			switch field.Name {
 			case "ExternalId":
 				return ec.fieldContext_Transaction_ExternalId(ctx, field)
+			case "DisplayUrl":
+				return ec.fieldContext_Transaction_DisplayUrl(ctx, field)
 			case "name":
 				return ec.fieldContext_Transaction_name(ctx, field)
 			case "amount":
@@ -1668,6 +1738,50 @@ func (ec *executionContext) _Transaction_ExternalId(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_Transaction_ExternalId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Transaction",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Transaction_DisplayUrl(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Transaction_DisplayUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Transaction_DisplayUrl(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Transaction",
 		Field:      field,
@@ -4040,7 +4154,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"ExternalId", "name", "balance", "balanceaud", "pricebookid", "productid"}
+	fieldsInOrder := [...]string{"ExternalId", "DisplayUrl", "name", "balance", "balanceaud", "pricebookid", "productid"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4055,11 +4169,19 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			if err != nil {
 				return it, err
 			}
+		case "DisplayUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("DisplayUrl"))
+			it.DisplayURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4067,7 +4189,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("balance"))
-			it.Balance, err = ec.unmarshalNFloat2float64(ctx, v)
+			it.Balance, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4075,7 +4197,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("balanceaud"))
-			it.Balanceaud, err = ec.unmarshalNFloat2float64(ctx, v)
+			it.Balanceaud, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4083,7 +4205,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pricebookid"))
-			it.Pricebookid, err = ec.unmarshalNString2string(ctx, v)
+			it.Pricebookid, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4091,7 +4213,7 @@ func (ec *executionContext) unmarshalInputUpdateBalance(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productid"))
-			it.Productid, err = ec.unmarshalNString2string(ctx, v)
+			it.Productid, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4108,7 +4230,7 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"ExternalId", "name", "amount", "date", "type"}
+	fieldsInOrder := [...]string{"ExternalId", "DisplayUrl", "name", "amount", "date", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4123,11 +4245,19 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "DisplayUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("DisplayUrl"))
+			it.DisplayURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4135,7 +4265,7 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
-			it.Amount, err = ec.unmarshalNFloat2float64(ctx, v)
+			it.Amount, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4143,7 +4273,7 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
-			it.Date, err = ec.unmarshalNString2string(ctx, v)
+			it.Date, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4151,7 +4281,7 @@ func (ec *executionContext) unmarshalInputUpdateTransaction(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			it.Type, err = ec.unmarshalNString2string(ctx, v)
+			it.Type, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4182,6 +4312,13 @@ func (ec *executionContext) _Balance(ctx context.Context, sel ast.SelectionSet, 
 		case "ExternalId":
 
 			out.Values[i] = ec._Balance_ExternalId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "DisplayUrl":
+
+			out.Values[i] = ec._Balance_DisplayUrl(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -4424,6 +4561,13 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 		case "ExternalId":
 
 			out.Values[i] = ec._Transaction_ExternalId(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "DisplayUrl":
+
+			out.Values[i] = ec._Transaction_DisplayUrl(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -5346,6 +5490,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalFloatContext(*v)
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

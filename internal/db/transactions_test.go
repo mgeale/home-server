@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/mgeale/homeserver/graph/model"
 )
 
 func TestTransactionModelGet(t *testing.T) {
@@ -65,12 +67,12 @@ func TestTransactionModelInsert(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		transaction *Transaction
+		transaction *model.NewTransaction
 		wantError   error
 	}{
 		{
 			name: "Valid Transaction",
-			transaction: &Transaction{
+			transaction: &model.NewTransaction{
 				Name:   "TNS-00999",
 				Amount: 111.00,
 				Date:   "2018-12-23 17:25:22",
@@ -90,7 +92,7 @@ func TestTransactionModelInsert(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			_, err := m.Insert(tt.name, tt.transaction.Amount, tt.transaction.Date, tt.transaction.Type)
+			_, err := m.Insert(tt.transaction)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -106,28 +108,29 @@ func TestTransactionModelUpdate(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		transaction *Transaction
+		transID     string
+		transaction map[string]interface{}
 		wantError   error
 	}{
 		{
-			name: "Valid ID",
-			transaction: &Transaction{
-				ID:     "1c0d2b44-b0ce-11ed-b95f-dca632bb7cae",
-				Name:   "TNS-00999",
-				Amount: 111.00,
-				Date:   "2018-12-23 17:25:22",
-				Type:   "Repayment",
+			name:    "Valid ID",
+			transID: "1c0d2b44-b0ce-11ed-b95f-dca632bb7cae",
+			transaction: map[string]interface{}{
+				"name":   "TNS-00999",
+				"amount": 111.00,
+				"date":   "2018-12-23 17:25:22",
+				"type":   "Repayment",
 			},
 			wantError: nil,
 		},
 		{
-			name: "Non-existent ID",
-			transaction: &Transaction{
-				ID:     "99999999",
-				Name:   "TNS-00999",
-				Amount: 111.00,
-				Date:   "2018-12-23 17:25:22",
-				Type:   "Repayment",
+			name:    "Non-existent ID",
+			transID: "99999999",
+			transaction: map[string]interface{}{
+				"name":   "TNS-00999",
+				"amount": 111.00,
+				"date":   "2018-12-23 17:25:22",
+				"type":   "Repayment",
 			},
 			wantError: ErrRecordNotFound,
 		},
@@ -143,7 +146,7 @@ func TestTransactionModelUpdate(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.transaction.ID, tt.transaction.Name, tt.transaction.Amount, tt.transaction.Date, tt.transaction.Type)
+			err := m.Update(tt.transID, tt.transaction)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)

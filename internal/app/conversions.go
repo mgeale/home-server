@@ -1,11 +1,11 @@
-package types
+package app
 
 import (
 	"github.com/mgeale/homeserver/graph/model"
 	"github.com/mgeale/homeserver/internal/db"
 )
 
-func CreateBalanceQuery(where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) *db.Query {
+func createBalanceQuery(where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) *db.Query {
 	filter := &db.Filter{}
 	if where != nil {
 		filter = toFilter(where)
@@ -20,7 +20,7 @@ func CreateBalanceQuery(where *model.BalanceFilter, orderBy model.BalanceSort, l
 	}
 }
 
-func CreateTransactionQuery(where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) *db.Query {
+func createTransactionQuery(where *model.TransactionFilter, orderBy model.TransactionSort, limit *int) *db.Query {
 	filter := &db.Filter{}
 	if where != nil {
 		filter = toTransactionFilter(where)
@@ -79,7 +79,7 @@ func toTransactionFilter(where *model.TransactionFilter) *db.Filter {
 	return filter
 }
 
-func ToBalanceModel(balances []*db.Balance) []*model.Balance {
+func toBalanceModel(balances []*db.Balance) []*model.Balance {
 	result := make([]*model.Balance, len(balances))
 	for i, b := range balances {
 		result[i] = &model.Balance{
@@ -95,7 +95,7 @@ func ToBalanceModel(balances []*db.Balance) []*model.Balance {
 	return result
 }
 
-func ToTransactionModel(transactions []*db.Transaction) []*model.Transaction {
+func toTransactionModel(transactions []*db.Transaction) []*model.Transaction {
 	result := make([]*model.Transaction, len(transactions))
 	for i, t := range transactions {
 		result[i] = &model.Transaction{

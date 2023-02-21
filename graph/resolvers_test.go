@@ -189,6 +189,7 @@ func TestUpdateTransaction(t *testing.T) {
 			mutation UpdateTransaction  {
 				updateTransaction(input: {
 					ExternalId: "5555",
+					DisplayUrl: "",
 					name: "BAL-6789", 
 					amount: 220.22
 					date: "2018-12-23 17:25:22",

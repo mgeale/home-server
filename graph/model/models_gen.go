@@ -10,6 +10,7 @@ import (
 
 type Balance struct {
 	ExternalID  string  `json:"ExternalId"`
+	DisplayURL  string  `json:"DisplayUrl"`
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
@@ -56,6 +57,7 @@ type RefreshTokenInput struct {
 
 type Transaction struct {
 	ExternalID string  `json:"ExternalId"`
+	DisplayURL string  `json:"DisplayUrl"`
 	Name       string  `json:"name"`
 	Amount     float64 `json:"amount"`
 	Date       string  `json:"date"`
@@ -76,26 +78,29 @@ type TransactionSort struct {
 }
 
 type UpdateBalance struct {
-	ExternalID  string  `json:"ExternalId"`
-	Name        string  `json:"name"`
-	Balance     float64 `json:"balance"`
-	Balanceaud  float64 `json:"balanceaud"`
-	Pricebookid string  `json:"pricebookid"`
-	Productid   string  `json:"productid"`
+	ExternalID  string   `json:"ExternalId"`
+	DisplayURL  *string  `json:"DisplayUrl"`
+	Name        *string  `json:"name"`
+	Balance     *float64 `json:"balance"`
+	Balanceaud  *float64 `json:"balanceaud"`
+	Pricebookid *string  `json:"pricebookid"`
+	Productid   *string  `json:"productid"`
 }
 
 type UpdateTransaction struct {
-	ExternalID string  `json:"ExternalId"`
-	Name       string  `json:"name"`
-	Amount     float64 `json:"amount"`
-	Date       string  `json:"date"`
-	Type       string  `json:"type"`
+	ExternalID string   `json:"ExternalId"`
+	DisplayURL *string  `json:"DisplayUrl"`
+	Name       *string  `json:"name"`
+	Amount     *float64 `json:"amount"`
+	Date       *string  `json:"date"`
+	Type       *string  `json:"type"`
 }
 
 type BalanceField string
 
 const (
 	BalanceFieldExternalID  BalanceField = "ExternalId"
+	BalanceFieldDisplayURL  BalanceField = "DisplayUrl"
 	BalanceFieldName        BalanceField = "name"
 	BalanceFieldBalance     BalanceField = "balance"
 	BalanceFieldBalanceaud  BalanceField = "balanceaud"
@@ -106,6 +111,7 @@ const (
 
 var AllBalanceField = []BalanceField{
 	BalanceFieldExternalID,
+	BalanceFieldDisplayURL,
 	BalanceFieldName,
 	BalanceFieldBalance,
 	BalanceFieldBalanceaud,
@@ -116,7 +122,7 @@ var AllBalanceField = []BalanceField{
 
 func (e BalanceField) IsValid() bool {
 	switch e {
-	case BalanceFieldExternalID, BalanceFieldName, BalanceFieldBalance, BalanceFieldBalanceaud, BalanceFieldPricebookid, BalanceFieldProductid, BalanceFieldCreated:
+	case BalanceFieldExternalID, BalanceFieldDisplayURL, BalanceFieldName, BalanceFieldBalance, BalanceFieldBalanceaud, BalanceFieldPricebookid, BalanceFieldProductid, BalanceFieldCreated:
 		return true
 	}
 	return false
@@ -245,6 +251,7 @@ type TransactionField string
 
 const (
 	TransactionFieldExternalID TransactionField = "ExternalId"
+	TransactionFieldDisplayURL TransactionField = "DisplayUrl"
 	TransactionFieldName       TransactionField = "name"
 	TransactionFieldAmount     TransactionField = "amount"
 	TransactionFieldDate       TransactionField = "date"
@@ -254,6 +261,7 @@ const (
 
 var AllTransactionField = []TransactionField{
 	TransactionFieldExternalID,
+	TransactionFieldDisplayURL,
 	TransactionFieldName,
 	TransactionFieldAmount,
 	TransactionFieldDate,
@@ -263,7 +271,7 @@ var AllTransactionField = []TransactionField{
 
 func (e TransactionField) IsValid() bool {
 	switch e {
-	case TransactionFieldExternalID, TransactionFieldName, TransactionFieldAmount, TransactionFieldDate, TransactionFieldType, TransactionFieldCreated:
+	case TransactionFieldExternalID, TransactionFieldDisplayURL, TransactionFieldName, TransactionFieldAmount, TransactionFieldDate, TransactionFieldType, TransactionFieldCreated:
 		return true
 	}
 	return false

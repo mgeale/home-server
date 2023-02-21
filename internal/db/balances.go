@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ido50/sqlz"
+	"github.com/mgeale/homeserver/graph/model"
 )
 
 type Balance struct {
@@ -25,11 +26,11 @@ type BalanceModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid string) (string, error) {
+func (m *BalanceModel) Insert(input *model.NewBalance) (string, error) {
 	stmt := sqlz.New(m.DB, "mysql").
 		InsertInto("balances").
 		Columns("id", "name", "balance", "balanceaud", "pricebookid", "productid", "created").
-		Values(sqlz.Indirect("UUID()"), name, balance, balanceaud, pricebookid, productid, sqlz.Indirect("UTC_TIMESTAMP()"))
+		Values(sqlz.Indirect("UUID()"), input.Name, input.Balance, input.Balanceaud, input.Pricebookid, input.Productid, sqlz.Indirect("UTC_TIMESTAMP()"))
 
 	result, err := stmt.Exec()
 	if err != nil {
@@ -44,14 +45,10 @@ func (m *BalanceModel) Insert(name string, balance, balanceaud float64, priceboo
 	return fmt.Sprint(id), nil
 }
 
-func (m *BalanceModel) Update(id, name string, balance, balanceaud float64, pricebookid, productid string) error {
+func (m *BalanceModel) Update(id string, values map[string]interface{}) error {
 	stmt := sqlz.New(m.DB, "mysql").
 		Update("balances").
-		Set("name", name).
-		Set("balance", balance).
-		Set("balanceaud", balanceaud).
-		Set("pricebookid", pricebookid).
-		Set("productid", productid).
+		SetMap(values).
 		Where(sqlz.Eq("id", id))
 
 	result, err := stmt.Exec()

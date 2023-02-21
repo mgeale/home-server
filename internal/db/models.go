@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/ido50/sqlz"
+	"github.com/mgeale/homeserver/graph/model"
 )
 
 var (
@@ -64,14 +65,14 @@ type Models struct {
 	Balances interface {
 		Delete(id string) error
 		Get(query *Query) ([]*Balance, error)
-		Insert(name string, balance float64, balanceaud float64, pricebookid string, productid string) (string, error)
-		Update(id, name string, balance float64, balanceaud float64, pricebookid string, productid string) error
+		Insert(input *model.NewBalance) (string, error)
+		Update(id string, values map[string]interface{}) error
 	}
 	Transactions interface {
 		Delete(id string) error
 		Get(query *Query) ([]*Transaction, error)
-		Insert(name string, amount float64, date string, transactionType string) (string, error)
-		Update(id, name string, amount float64, date string, transactionType string) error
+		Insert(input *model.NewTransaction) (string, error)
+		Update(id string, values map[string]interface{}) error
 	}
 	Users interface {
 		GetByEmail(email string) (*User, error)

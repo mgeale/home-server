@@ -4,7 +4,8 @@ import (
 	"log"
 	"os"
 	"testing"
-	"time"
+
+	"github.com/mgeale/homeserver/graph/model"
 )
 
 func TestBalanceModelInsert(t *testing.T) {
@@ -14,18 +15,17 @@ func TestBalanceModelInsert(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		balance   *Balance
+		balance   *model.NewBalance
 		wantError error
 	}{
 		{
 			name: "Valid ID",
-			balance: &Balance{
+			balance: &model.NewBalance{
 				Name:        "BAL-7878",
 				Balance:     45.13,
-				BalanceAUD:  1056.72,
-				PricebookID: "01s9D000001lX8rQAE",
-				ProductID:   "01t9D000003rsQoQAI",
-				Created:     time.Date(2018, 12, 23, 17, 25, 22, 0, time.UTC),
+				Balanceaud:  1056.72,
+				Pricebookid: "01s9D000001lX8rQAE",
+				Productid:   "01t9D000003rsQoQAI",
 			},
 			wantError: nil,
 		},
@@ -41,7 +41,7 @@ func TestBalanceModelInsert(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			_, err := m.Insert(tt.balance.Name, tt.balance.Balance, tt.balance.BalanceAUD, tt.balance.PricebookID, tt.balance.ProductID)
+			_, err := m.Insert(tt.balance)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -132,16 +132,25 @@ func TestBalanceModelUpdate(t *testing.T) {
 	tests := []struct {
 		name      string
 		balanceID string
+		balance   map[string]interface{}
 		wantError error
 	}{
 		{
 			name:      "Valid ID",
 			balanceID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
+			balance: map[string]interface{}{
+				"name":       "BAL-0022",
+				"balance":    200,
+				"balanceaud": 2000,
+			},
 			wantError: nil,
 		},
 		{
 			name:      "Non-existent ID",
-			balanceID: "9999999",
+			balanceID: "99999999",
+			balance: map[string]interface{}{
+				"name": "BAL-0022",
+			},
 			wantError: ErrRecordNotFound,
 		},
 	}
@@ -156,7 +165,7 @@ func TestBalanceModelUpdate(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.balanceID, "BAL-0022", 200, 2000, "3333", "2222")
+			err := m.Update(tt.balanceID, tt.balance)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)

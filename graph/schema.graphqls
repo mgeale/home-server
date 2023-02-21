@@ -1,5 +1,6 @@
 type Balance {
   ExternalId: String!
+  DisplayUrl: String!
   name: String!
   balance: Float!
   balanceaud: Float!
@@ -10,6 +11,7 @@ type Balance {
 
 type Transaction {
   ExternalId: String!
+  DisplayUrl: String!
   name: String!
   amount: Float!
   date: String!
@@ -43,19 +45,21 @@ input NewTransaction {
 
 input UpdateBalance {
   ExternalId: String!
-  name: String!
-  balance: Float!
-  balanceaud: Float!
-  pricebookid: String!
-  productid: String!
+  DisplayUrl: String
+  name: String
+  balance: Float
+  balanceaud: Float
+  pricebookid: String
+  productid: String
 }
 
 input UpdateTransaction {
   ExternalId: String!
-  name: String!
-  amount: Float!
-  date: String!
-  type: String!
+  DisplayUrl: String
+  name: String
+  amount: Float
+  date: String
+  type: String
 }
 
 enum FilterKind {
@@ -78,6 +82,7 @@ enum SortDirection {
 
 enum BalanceField {
   ExternalId
+  DisplayUrl
   name
   balance
   balanceaud
@@ -100,6 +105,7 @@ input BalanceSort {
 
 enum TransactionField {
   ExternalId
+  DisplayUrl
   name
   amount
   date

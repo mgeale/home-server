@@ -3,6 +3,7 @@ package mock
 import (
 	"time"
 
+	"github.com/mgeale/homeserver/graph/model"
 	"github.com/mgeale/homeserver/internal/db"
 )
 
@@ -18,11 +19,11 @@ var mockBalance = &db.Balance{
 
 type BalanceModel struct{}
 
-func (m *BalanceModel) Insert(name string, balance, balanceaud float64, pricebookid, productid string) (string, error) {
+func (m *BalanceModel) Insert(input *model.NewBalance) (string, error) {
 	return "2", nil
 }
 
-func (m *BalanceModel) Update(id, name string, balance, balanceaud float64, pricebookid, productid string) error {
+func (m *BalanceModel) Update(id string, values map[string]interface{}) error {
 	switch id {
 	case "1":
 		return nil

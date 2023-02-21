@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ido50/sqlz"
+	"github.com/mgeale/homeserver/graph/model"
 )
 
 type Transaction struct {
@@ -26,11 +27,11 @@ type TransactionModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *TransactionModel) Insert(name string, amount float64, date string, transactionType string) (string, error) {
+func (m *TransactionModel) Insert(input *model.NewTransaction) (string, error) {
 	stmt := sqlz.New(m.DB, "mysql").
 		InsertInto("transactions").
 		Columns("id", "name", "amount", "date", "type", "created").
-		Values(sqlz.Indirect("UUID()"), name, amount, date, transactionType, sqlz.Indirect("UTC_TIMESTAMP()"))
+		Values(sqlz.Indirect("UUID()"), input.Name, input.Amount, input.Date, input.Type, sqlz.Indirect("UTC_TIMESTAMP()"))
 
 	result, err := stmt.Exec()
 	if err != nil {
@@ -45,13 +46,10 @@ func (m *TransactionModel) Insert(name string, amount float64, date string, tran
 	return fmt.Sprint(id), nil
 }
 
-func (m *TransactionModel) Update(id, name string, amount float64, date string, transactionType string) error {
+func (m *TransactionModel) Update(id string, values map[string]interface{}) error {
 	stmt := sqlz.New(m.DB, "mysql").
 		Update("transactions").
-		Set("name", name).
-		Set("amount", amount).
-		Set("date", date).
-		Set("type", transactionType).
+		SetMap(values).
 		Where(sqlz.Eq("id", id))
 
 	result, err := stmt.Exec()

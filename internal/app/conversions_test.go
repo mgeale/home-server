@@ -1,4 +1,4 @@
-package types
+package app
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func TestCreateQuery(t *testing.T) {
 		orderBy := model.BalanceSort{}
 		limit := 100
 
-		result := CreateBalanceQuery(where, orderBy, &limit)
+		result := createBalanceQuery(where, orderBy, &limit)
 		resultFilters := make([]*db.Filter, 2)
 		resultFilters[0] = &db.Filter{
 			Field: db.Field("id"),
