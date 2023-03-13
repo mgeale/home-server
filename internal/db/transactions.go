@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -27,44 +26,53 @@ type TransactionModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *TransactionModel) Insert(input *model.NewTransaction) (string, error) {
+func (m *TransactionModel) Insert(input []*model.InsertTransaction) ([]string, error) {
 	stmt := sqlz.New(m.DB, "mysql").
 		InsertInto("transactions").
 		Columns("id", "name", "amount", "date", "type", "created").
-		Values(sqlz.Indirect("UUID()"), input.Name, input.Amount, input.Date, input.Type, sqlz.Indirect("UTC_TIMESTAMP()"))
+		Returning("id")
 
-	result, err := stmt.Exec()
+	vals := make([][]interface{}, len(input))
+	for i, value := range input {
+		vals[i] = []interface{}{sqlz.Indirect("UUID()"), value.Name, value.Amount, value.Date, value.Type, sqlz.Indirect("UTC_TIMESTAMP()")}
+	}
+	stmt.ValueMultiple(vals)
+
+	var ids []string
+	err := stmt.GetAll(&ids)
 	if err != nil {
-		return "0", err
+		return nil, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return "0", err
-	}
-
-	return fmt.Sprint(id), nil
+	return ids, nil
 }
 
-func (m *TransactionModel) Update(id string, values map[string]interface{}) error {
-	stmt := sqlz.New(m.DB, "mysql").
-		Update("transactions").
-		SetMap(values).
-		Where(sqlz.Eq("id", id))
+func (m *TransactionModel) Update(input []*model.UpdateTransaction) error {
+	return sqlz.New(m.DB, "mysql").Transactional(func(tx *sqlz.Tx) error {
+		for _, in := range input {
+			values := constructValuesMap(*in)
+			delete(values, "externalid")
+			delete(values, "displayurl")
 
-	result, err := stmt.Exec()
-	if err != nil {
-		return err
-	}
+			result, err := tx.Update("transactions").
+				SetMap(values).
+				Where(sqlz.Eq("id", in.ExternalID)).
+				Exec()
 
-	n, err := result.RowsAffected()
-	if n == 0 {
-		return ErrRecordNotFound
-	} else if err != nil {
-		return err
-	}
+			if err != nil {
+				return err
+			}
 
-	return nil
+			n, err := result.RowsAffected()
+			if n == 0 {
+				return ErrRecordNotFound
+			} else if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (m *TransactionModel) Get(query *Query) ([]*Transaction, error) {
@@ -86,10 +94,15 @@ func (m *TransactionModel) Get(query *Query) ([]*Transaction, error) {
 	return rows, nil
 }
 
-func (m *TransactionModel) Delete(id string) error {
+func (m *TransactionModel) Delete(ids []string) error {
+	id := make([]interface{}, len(ids))
+	for i, v := range ids {
+		id[i] = v
+	}
+
 	stmt := sqlz.New(m.DB, "mysql").
 		DeleteFrom("transactions").
-		Where(sqlz.Eq("id", id))
+		Where(sqlz.In("id", id...))
 
 	result, err := stmt.Exec()
 	if err != nil {

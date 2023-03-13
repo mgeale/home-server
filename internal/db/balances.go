@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -26,44 +25,53 @@ type BalanceModel struct {
 	ErrorLog *log.Logger
 }
 
-func (m *BalanceModel) Insert(input *model.NewBalance) (string, error) {
+func (m *BalanceModel) Insert(input []*model.InsertBalance) ([]string, error) {
 	stmt := sqlz.New(m.DB, "mysql").
 		InsertInto("balances").
 		Columns("id", "name", "balance", "balanceaud", "pricebookid", "productid", "created").
-		Values(sqlz.Indirect("UUID()"), input.Name, input.Balance, input.Balanceaud, input.Pricebookid, input.Productid, sqlz.Indirect("UTC_TIMESTAMP()"))
+		Returning("id")
 
-	result, err := stmt.Exec()
+	vals := make([][]interface{}, len(input))
+	for i, value := range input {
+		vals[i] = []interface{}{sqlz.Indirect("UUID()"), value.Name, value.Balance, value.Balanceaud, value.Pricebookid, value.Productid, sqlz.Indirect("UTC_TIMESTAMP()")}
+	}
+	stmt.ValueMultiple(vals)
+
+	var ids []string
+	err := stmt.GetAll(&ids)
 	if err != nil {
-		return "0", err
+		return nil, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return "0", err
-	}
-
-	return fmt.Sprint(id), nil
+	return ids, nil
 }
 
-func (m *BalanceModel) Update(id string, values map[string]interface{}) error {
-	stmt := sqlz.New(m.DB, "mysql").
-		Update("balances").
-		SetMap(values).
-		Where(sqlz.Eq("id", id))
+func (m *BalanceModel) Update(input []*model.UpdateBalance) error {
+	return sqlz.New(m.DB, "mysql").Transactional(func(tx *sqlz.Tx) error {
+		for _, in := range input {
+			values := constructValuesMap(*in)
+			delete(values, "externalid")
+			delete(values, "displayurl")
 
-	result, err := stmt.Exec()
-	if err != nil {
-		return err
-	}
+			stmt := tx.Update("balances").
+				SetMap(values).
+				Where(sqlz.Eq("id", in.ExternalID))
 
-	n, err := result.RowsAffected()
-	if n == 0 {
-		return ErrRecordNotFound
-	} else if err != nil {
-		return err
-	}
+			result, err := stmt.Exec()
+			if err != nil {
+				return err
+			}
 
-	return nil
+			n, err := result.RowsAffected()
+			if n == 0 {
+				return ErrRecordNotFound
+			} else if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (m *BalanceModel) Get(query *Query) ([]*Balance, error) {
@@ -85,10 +93,14 @@ func (m *BalanceModel) Get(query *Query) ([]*Balance, error) {
 	return rows, nil
 }
 
-func (m *BalanceModel) Delete(id string) error {
+func (m *BalanceModel) Delete(ids []string) error {
+	id := make([]interface{}, len(ids))
+	for i, v := range ids {
+		id[i] = v
+	}
 	stmt := sqlz.New(m.DB, "mysql").
 		DeleteFrom("balances").
-		Where(sqlz.Eq("id", id))
+		Where(sqlz.In("id", id...))
 
 	result, err := stmt.Exec()
 	if err != nil {

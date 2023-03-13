@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
+	"strings"
 
 	"github.com/ido50/sqlz"
 	"github.com/mgeale/homeserver/graph/model"
@@ -63,16 +65,16 @@ type Filter struct {
 
 type Models struct {
 	Balances interface {
-		Delete(id string) error
+		Delete(ids []string) error
 		Get(query *Query) ([]*Balance, error)
-		Insert(input *model.NewBalance) (string, error)
-		Update(id string, values map[string]interface{}) error
+		Insert(input []*model.InsertBalance) ([]string, error)
+		Update(input []*model.UpdateBalance) error
 	}
 	Transactions interface {
-		Delete(id string) error
+		Delete(ids []string) error
 		Get(query *Query) ([]*Transaction, error)
-		Insert(input *model.NewTransaction) (string, error)
-		Update(id string, values map[string]interface{}) error
+		Insert(input []*model.InsertTransaction) ([]string, error)
+		Update(input []*model.UpdateTransaction) error
 	}
 	Users interface {
 		GetByEmail(email string) (*User, error)
@@ -99,6 +101,22 @@ func NewModels(db *sql.DB) Models {
 			ErrorLog: errorLog,
 		},
 	}
+}
+
+func constructValuesMap(structure any) map[string]interface{} {
+	values := reflect.ValueOf(structure)
+	types := values.Type()
+	valuesMap := map[string]interface{}{}
+	for i := 0; i < values.NumField(); i++ {
+		zero := reflect.Zero(values.Field(i).Type()).Interface()
+		current := values.Field(i).Interface()
+
+		if reflect.DeepEqual(current, zero) {
+			continue
+		}
+		valuesMap[strings.ToLower(types.Field(i).Name)] = values.Field(i).Interface()
+	}
+	return valuesMap
 }
 
 func addOptsToSelectOrdersQuery(stmt *sqlz.SelectStmt, opts *Query) (*sqlz.SelectStmt, error) {

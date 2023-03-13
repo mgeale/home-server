@@ -31,12 +31,7 @@ type BalanceSort struct {
 	Direction SortDirection `json:"direction"`
 }
 
-type Login struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-type NewBalance struct {
+type InsertBalance struct {
 	Name        string  `json:"name"`
 	Balance     float64 `json:"balance"`
 	Balanceaud  float64 `json:"balanceaud"`
@@ -44,11 +39,16 @@ type NewBalance struct {
 	Productid   string  `json:"productid"`
 }
 
-type NewTransaction struct {
+type InsertTransaction struct {
 	Name   string  `json:"name"`
 	Amount float64 `json:"amount"`
 	Date   string  `json:"date"`
 	Type   string  `json:"type"`
+}
+
+type Login struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type RefreshTokenInput struct {

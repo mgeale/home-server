@@ -66,17 +66,19 @@ func TestTransactionModelInsert(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		transaction *model.NewTransaction
-		wantError   error
+		name         string
+		transactions []*model.InsertTransaction
+		wantError    error
 	}{
 		{
 			name: "Valid Transaction",
-			transaction: &model.NewTransaction{
-				Name:   "TNS-00999",
-				Amount: 111.00,
-				Date:   "2018-12-23 17:25:22",
-				Type:   "Repayment",
+			transactions: []*model.InsertTransaction{
+				{
+					Name:   "TNS-00999",
+					Amount: 111.00,
+					Date:   "2018-12-23 17:25:22",
+					Type:   "Repayment",
+				},
 			},
 			wantError: nil,
 		},
@@ -92,10 +94,14 @@ func TestTransactionModelInsert(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			_, err := m.Insert(tt.transaction)
+			ids, err := m.Insert(tt.transactions)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
+			}
+
+			if len(ids) != 1 {
+				t.Errorf("want 1; got %v", len(ids))
 			}
 		})
 	}
@@ -106,31 +112,39 @@ func TestTransactionModelUpdate(t *testing.T) {
 		t.Skip("mysql: skipping integration test")
 	}
 
+	var name string = "TNS-00999"
+	var amount float64 = 111.00
+	var date string = "2018-12-23 17:25:22"
+	var transType string = "Repayment"
+
 	tests := []struct {
-		name        string
-		transID     string
-		transaction map[string]interface{}
-		wantError   error
+		name         string
+		transactions []*model.UpdateTransaction
+		wantError    error
 	}{
 		{
-			name:    "Valid ID",
-			transID: "1c0d2b44-b0ce-11ed-b95f-dca632bb7cae",
-			transaction: map[string]interface{}{
-				"name":   "TNS-00999",
-				"amount": 111.00,
-				"date":   "2018-12-23 17:25:22",
-				"type":   "Repayment",
+			name: "Valid ID",
+			transactions: []*model.UpdateTransaction{
+				{
+					ExternalID: "1c0d2b44-b0ce-11ed-b95f-dca632bb7cae",
+					Name:       &name,
+					Amount:     &amount,
+					Date:       &date,
+					Type:       &transType,
+				},
 			},
 			wantError: nil,
 		},
 		{
-			name:    "Non-existent ID",
-			transID: "99999999",
-			transaction: map[string]interface{}{
-				"name":   "TNS-00999",
-				"amount": 111.00,
-				"date":   "2018-12-23 17:25:22",
-				"type":   "Repayment",
+			name: "Non-existent ID",
+			transactions: []*model.UpdateTransaction{
+				{
+					ExternalID: "99999999",
+					Name:       &name,
+					Amount:     &amount,
+					Date:       &date,
+					Type:       &transType,
+				},
 			},
 			wantError: ErrRecordNotFound,
 		},
@@ -146,7 +160,7 @@ func TestTransactionModelUpdate(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.transID, tt.transaction)
+			err := m.Update(tt.transactions)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -162,17 +176,17 @@ func TestTransactionModelDelete(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		transID   string
+		transIDs  []string
 		wantError error
 	}{
 		{
 			name:      "Valid ID",
-			transID:   "1c0d2b44-b0ce-11ed-b95f-dca632bb7cae",
+			transIDs:  []string{"1c0d2b44-b0ce-11ed-b95f-dca632bb7cae"},
 			wantError: nil,
 		},
 		{
 			name:      "Non-existent ID",
-			transID:   "22222222",
+			transIDs:  []string{"22222222"},
 			wantError: ErrRecordNotFound,
 		},
 	}
@@ -187,7 +201,7 @@ func TestTransactionModelDelete(t *testing.T) {
 
 			m := TransactionModel{db, infoLog, errorLog}
 
-			err := m.Delete(tt.transID)
+			err := m.Delete(tt.transIDs)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)

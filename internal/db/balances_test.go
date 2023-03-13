@@ -15,17 +15,26 @@ func TestBalanceModelInsert(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		balance   *model.NewBalance
+		balances  []*model.InsertBalance
 		wantError error
 	}{
 		{
 			name: "Valid ID",
-			balance: &model.NewBalance{
-				Name:        "BAL-7878",
-				Balance:     45.13,
-				Balanceaud:  1056.72,
-				Pricebookid: "01s9D000001lX8rQAE",
-				Productid:   "01t9D000003rsQoQAI",
+			balances: []*model.InsertBalance{
+				{
+					Name:        "BAL-7878",
+					Balance:     45.13,
+					Balanceaud:  1056.72,
+					Pricebookid: "01s9D000001lX8rQAE",
+					Productid:   "01t9D000003rsQoQAI",
+				},
+				{
+					Name:        "BAL-8989",
+					Balance:     78.45,
+					Balanceaud:  132.41,
+					Pricebookid: "01s9D000001lX8rQAE",
+					Productid:   "01t9D000003rsQoQAI",
+				},
 			},
 			wantError: nil,
 		},
@@ -41,10 +50,14 @@ func TestBalanceModelInsert(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			_, err := m.Insert(tt.balance)
+			ids, err := m.Insert(tt.balances)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
+			}
+
+			if len(ids) != 2 {
+				t.Errorf("want 2; got %v", len(ids))
 			}
 		})
 	}
@@ -129,27 +142,34 @@ func TestBalanceModelUpdate(t *testing.T) {
 		t.Skip("mysql: skipping integration test")
 	}
 
+	var name string = "BAL-0022"
+	var balance float64 = 200
+	var balanceAud float64 = 2000
+
 	tests := []struct {
 		name      string
-		balanceID string
-		balance   map[string]interface{}
+		balances  []*model.UpdateBalance
 		wantError error
 	}{
 		{
-			name:      "Valid ID",
-			balanceID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
-			balance: map[string]interface{}{
-				"name":       "BAL-0022",
-				"balance":    200,
-				"balanceaud": 2000,
+			name: "Valid ID",
+			balances: []*model.UpdateBalance{
+				{
+					ExternalID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
+					Name:       &name,
+					Balance:    &balance,
+					Balanceaud: &balanceAud,
+				},
 			},
 			wantError: nil,
 		},
 		{
-			name:      "Non-existent ID",
-			balanceID: "99999999",
-			balance: map[string]interface{}{
-				"name": "BAL-0022",
+			name: "Non-existent ID",
+			balances: []*model.UpdateBalance{
+				{
+					ExternalID: "99999999",
+					Name:       &name,
+				},
 			},
 			wantError: ErrRecordNotFound,
 		},
@@ -165,7 +185,7 @@ func TestBalanceModelUpdate(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			err := m.Update(tt.balanceID, tt.balance)
+			err := m.Update(tt.balances)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)
@@ -180,19 +200,19 @@ func TestBalanceModelDelete(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		balanceID string
-		wantError error
+		name       string
+		balanceIDs []string
+		wantError  error
 	}{
 		{
-			name:      "Valid ID",
-			balanceID: "7a59f3e8-b0b9-11ed-a356-0242ac110002",
-			wantError: nil,
+			name:       "Valid ID",
+			balanceIDs: []string{"7a59f3e8-b0b9-11ed-a356-0242ac110002"},
+			wantError:  nil,
 		},
 		{
-			name:      "Non-existent ID",
-			balanceID: "9999999",
-			wantError: ErrRecordNotFound,
+			name:       "Non-existent ID",
+			balanceIDs: []string{"9999999"},
+			wantError:  ErrRecordNotFound,
 		},
 	}
 
@@ -206,7 +226,7 @@ func TestBalanceModelDelete(t *testing.T) {
 
 			m := BalanceModel{db, infoLog, errorLog}
 
-			err := m.Delete(tt.balanceID)
+			err := m.Delete(tt.balanceIDs)
 
 			if err != tt.wantError {
 				t.Errorf("want %v; got %s", tt.wantError, err)

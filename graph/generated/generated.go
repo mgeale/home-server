@@ -56,12 +56,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateBalance     func(childComplexity int, input model.NewBalance) int
-		CreateTransaction func(childComplexity int, input model.NewTransaction) int
-		DeleteBalance     func(childComplexity int, id string) int
-		DeleteTransaction func(childComplexity int, id string) int
-		UpdateBalance     func(childComplexity int, input model.UpdateBalance) int
-		UpdateTransaction func(childComplexity int, input model.UpdateTransaction) int
+		DeleteBalances     func(childComplexity int, ids []string) int
+		DeleteTransactions func(childComplexity int, ids []string) int
+		InsertBalances     func(childComplexity int, input []*model.InsertBalance) int
+		InsertTransactions func(childComplexity int, input []*model.InsertTransaction) int
+		UpdateBalances     func(childComplexity int, input []*model.UpdateBalance) int
+		UpdateTransactions func(childComplexity int, input []*model.UpdateTransaction) int
 	}
 
 	Query struct {
@@ -81,12 +81,12 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateBalance(ctx context.Context, input model.NewBalance) (string, error)
-	CreateTransaction(ctx context.Context, input model.NewTransaction) (string, error)
-	UpdateBalance(ctx context.Context, input model.UpdateBalance) (string, error)
-	UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (string, error)
-	DeleteBalance(ctx context.Context, id string) (string, error)
-	DeleteTransaction(ctx context.Context, id string) (string, error)
+	InsertBalances(ctx context.Context, input []*model.InsertBalance) ([]string, error)
+	InsertTransactions(ctx context.Context, input []*model.InsertTransaction) ([]string, error)
+	UpdateBalances(ctx context.Context, input []*model.UpdateBalance) (string, error)
+	UpdateTransactions(ctx context.Context, input []*model.UpdateTransaction) (string, error)
+	DeleteBalances(ctx context.Context, ids []string) (string, error)
+	DeleteTransactions(ctx context.Context, ids []string) (string, error)
 }
 type QueryResolver interface {
 	Balances(ctx context.Context, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error)
@@ -164,77 +164,77 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Balance.Productid(childComplexity), true
 
-	case "Mutation.createBalance":
-		if e.complexity.Mutation.CreateBalance == nil {
+	case "Mutation.deleteBalances":
+		if e.complexity.Mutation.DeleteBalances == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createBalance_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteBalances_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateBalance(childComplexity, args["input"].(model.NewBalance)), true
+		return e.complexity.Mutation.DeleteBalances(childComplexity, args["ids"].([]string)), true
 
-	case "Mutation.createTransaction":
-		if e.complexity.Mutation.CreateTransaction == nil {
+	case "Mutation.deleteTransactions":
+		if e.complexity.Mutation.DeleteTransactions == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createTransaction_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteTransactions_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTransaction(childComplexity, args["input"].(model.NewTransaction)), true
+		return e.complexity.Mutation.DeleteTransactions(childComplexity, args["ids"].([]string)), true
 
-	case "Mutation.deleteBalance":
-		if e.complexity.Mutation.DeleteBalance == nil {
+	case "Mutation.insertBalances":
+		if e.complexity.Mutation.InsertBalances == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteBalance_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_insertBalances_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteBalance(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.InsertBalances(childComplexity, args["input"].([]*model.InsertBalance)), true
 
-	case "Mutation.deleteTransaction":
-		if e.complexity.Mutation.DeleteTransaction == nil {
+	case "Mutation.insertTransactions":
+		if e.complexity.Mutation.InsertTransactions == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteTransaction_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_insertTransactions_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteTransaction(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.InsertTransactions(childComplexity, args["input"].([]*model.InsertTransaction)), true
 
-	case "Mutation.updateBalance":
-		if e.complexity.Mutation.UpdateBalance == nil {
+	case "Mutation.updateBalances":
+		if e.complexity.Mutation.UpdateBalances == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateBalance_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateBalances_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateBalance(childComplexity, args["input"].(model.UpdateBalance)), true
+		return e.complexity.Mutation.UpdateBalances(childComplexity, args["input"].([]*model.UpdateBalance)), true
 
-	case "Mutation.updateTransaction":
-		if e.complexity.Mutation.UpdateTransaction == nil {
+	case "Mutation.updateTransactions":
+		if e.complexity.Mutation.UpdateTransactions == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateTransaction_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateTransactions_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateTransaction(childComplexity, args["input"].(model.UpdateTransaction)), true
+		return e.complexity.Mutation.UpdateTransactions(childComplexity, args["input"].([]*model.UpdateTransaction)), true
 
 	case "Query.balances":
 		if e.complexity.Query.Balances == nil {
@@ -319,9 +319,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputBalanceFilter,
 		ec.unmarshalInputBalanceSort,
+		ec.unmarshalInputInsertBalance,
+		ec.unmarshalInputInsertTransaction,
 		ec.unmarshalInputLogin,
-		ec.unmarshalInputNewBalance,
-		ec.unmarshalInputNewTransaction,
 		ec.unmarshalInputRefreshTokenInput,
 		ec.unmarshalInputTransactionFilter,
 		ec.unmarshalInputTransactionSort,
@@ -417,7 +417,7 @@ input Login {
   password: String!
 }
 
-input NewBalance {
+input InsertBalance {
   name: String!
   balance: Float!
   balanceaud: Float!
@@ -425,7 +425,7 @@ input NewBalance {
   productid: String!
 }
 
-input NewTransaction {
+input InsertTransaction {
   name: String!
   amount: Float!
   date: String!
@@ -528,12 +528,12 @@ type Query {
 }
 
 type Mutation {
-  createBalance(input: NewBalance!): String!
-  createTransaction(input: NewTransaction!): String!
-  updateBalance(input: UpdateBalance!): String!
-  updateTransaction(input: UpdateTransaction!): String!
-  deleteBalance(id: String!): String!
-  deleteTransaction(id: String!): String!
+  insertBalances(input: [InsertBalance!]): [String!]!
+  insertTransactions(input: [InsertTransaction!]): [String!]!
+  updateBalances(input: [UpdateBalance!]): String!
+  updateTransactions(input: [UpdateTransaction!]): String!
+  deleteBalances(ids: [String!]): String!
+  deleteTransactions(ids: [String!]): String!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -542,13 +542,43 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createBalance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteBalances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewBalance
+	var arg0 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalOString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteTransactions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["ids"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+		arg0, err = ec.unmarshalOString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_insertBalances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*model.InsertBalance
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewBalance(ctx, tmp)
+		arg0, err = ec.unmarshalOInsertBalance2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertBalanceᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -557,13 +587,13 @@ func (ec *executionContext) field_Mutation_createBalance_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_insertTransactions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewTransaction
+	var arg0 []*model.InsertTransaction
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewTransaction(ctx, tmp)
+		arg0, err = ec.unmarshalOInsertTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertTransactionᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -572,43 +602,13 @@ func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Co
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteBalance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateBalances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateBalance_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.UpdateBalance
+	var arg0 []*model.UpdateBalance
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalance(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateBalance2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalanceᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -617,13 +617,13 @@ func (ec *executionContext) field_Mutation_updateBalance_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateTransaction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateTransactions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdateTransaction
+	var arg0 []*model.UpdateTransaction
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNUpdateTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransaction(ctx, tmp)
+		arg0, err = ec.unmarshalOUpdateTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransactionᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1103,8 +1103,8 @@ func (ec *executionContext) fieldContext_Balance_created(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createBalance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createBalance(ctx, field)
+func (ec *executionContext) _Mutation_insertBalances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_insertBalances(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1117,7 +1117,7 @@ func (ec *executionContext) _Mutation_createBalance(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateBalance(rctx, fc.Args["input"].(model.NewBalance))
+		return ec.resolvers.Mutation().InsertBalances(rctx, fc.Args["input"].([]*model.InsertBalance))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1129,12 +1129,12 @@ func (ec *executionContext) _Mutation_createBalance(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_insertBalances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1151,15 +1151,15 @@ func (ec *executionContext) fieldContext_Mutation_createBalance(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createBalance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_insertBalances_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createTransaction(ctx, field)
+func (ec *executionContext) _Mutation_insertTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_insertTransactions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1172,7 +1172,7 @@ func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTransaction(rctx, fc.Args["input"].(model.NewTransaction))
+		return ec.resolvers.Mutation().InsertTransactions(rctx, fc.Args["input"].([]*model.InsertTransaction))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1184,12 +1184,12 @@ func (ec *executionContext) _Mutation_createTransaction(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_insertTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1206,15 +1206,15 @@ func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createTransaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_insertTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateBalance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateBalance(ctx, field)
+func (ec *executionContext) _Mutation_updateBalances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateBalances(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1227,7 +1227,7 @@ func (ec *executionContext) _Mutation_updateBalance(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateBalance(rctx, fc.Args["input"].(model.UpdateBalance))
+		return ec.resolvers.Mutation().UpdateBalances(rctx, fc.Args["input"].([]*model.UpdateBalance))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1244,7 +1244,7 @@ func (ec *executionContext) _Mutation_updateBalance(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateBalances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1261,15 +1261,15 @@ func (ec *executionContext) fieldContext_Mutation_updateBalance(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateBalance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateBalances_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateTransaction(ctx, field)
+func (ec *executionContext) _Mutation_updateTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateTransactions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1282,7 +1282,7 @@ func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTransaction(rctx, fc.Args["input"].(model.UpdateTransaction))
+		return ec.resolvers.Mutation().UpdateTransactions(rctx, fc.Args["input"].([]*model.UpdateTransaction))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1299,7 +1299,7 @@ func (ec *executionContext) _Mutation_updateTransaction(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_updateTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1316,15 +1316,15 @@ func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateTransaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_updateTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteBalance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteBalance(ctx, field)
+func (ec *executionContext) _Mutation_deleteBalances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteBalances(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1337,7 +1337,7 @@ func (ec *executionContext) _Mutation_deleteBalance(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteBalance(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().DeleteBalances(rctx, fc.Args["ids"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1354,7 +1354,7 @@ func (ec *executionContext) _Mutation_deleteBalance(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteBalance(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteBalances(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1371,15 +1371,15 @@ func (ec *executionContext) fieldContext_Mutation_deleteBalance(ctx context.Cont
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteBalance_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteBalances_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deleteTransaction(ctx, field)
+func (ec *executionContext) _Mutation_deleteTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteTransactions(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1392,7 +1392,7 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTransaction(rctx, fc.Args["id"].(string))
+		return ec.resolvers.Mutation().DeleteTransactions(rctx, fc.Args["ids"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1409,7 +1409,7 @@ func (ec *executionContext) _Mutation_deleteTransaction(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_deleteTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1426,7 +1426,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deleteTransaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_deleteTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3879,44 +3879,8 @@ func (ec *executionContext) unmarshalInputBalanceSort(ctx context.Context, obj i
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interface{}) (model.Login, error) {
-	var it model.Login
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"username", "password"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "username":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-			it.Username, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "password":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
-			it.Password, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputNewBalance(ctx context.Context, obj interface{}) (model.NewBalance, error) {
-	var it model.NewBalance
+func (ec *executionContext) unmarshalInputInsertBalance(ctx context.Context, obj interface{}) (model.InsertBalance, error) {
+	var it model.InsertBalance
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3975,8 +3939,8 @@ func (ec *executionContext) unmarshalInputNewBalance(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewTransaction(ctx context.Context, obj interface{}) (model.NewTransaction, error) {
-	var it model.NewTransaction
+func (ec *executionContext) unmarshalInputInsertTransaction(ctx context.Context, obj interface{}) (model.InsertTransaction, error) {
+	var it model.InsertTransaction
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4018,6 +3982,42 @@ func (ec *executionContext) unmarshalInputNewTransaction(ctx context.Context, ob
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			it.Type, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputLogin(ctx context.Context, obj interface{}) (model.Login, error) {
+	var it model.Login
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"username", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4395,55 +4395,55 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createBalance":
+		case "insertBalances":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createBalance(ctx, field)
+				return ec._Mutation_insertBalances(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createTransaction":
+		case "insertTransactions":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createTransaction(ctx, field)
+				return ec._Mutation_insertTransactions(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateBalance":
+		case "updateBalances":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateBalance(ctx, field)
+				return ec._Mutation_updateBalances(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateTransaction":
+		case "updateTransactions":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateTransaction(ctx, field)
+				return ec._Mutation_updateTransactions(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "deleteBalance":
+		case "deleteBalances":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteBalance(ctx, field)
+				return ec._Mutation_deleteBalances(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "deleteTransaction":
+		case "deleteTransactions":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deleteTransaction(ctx, field)
+				return ec._Mutation_deleteTransactions(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -5050,14 +5050,14 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) unmarshalNNewBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewBalance(ctx context.Context, v interface{}) (model.NewBalance, error) {
-	res, err := ec.unmarshalInputNewBalance(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+func (ec *executionContext) unmarshalNInsertBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertBalance(ctx context.Context, v interface{}) (*model.InsertBalance, error) {
+	res, err := ec.unmarshalInputInsertBalance(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐNewTransaction(ctx context.Context, v interface{}) (model.NewTransaction, error) {
-	res, err := ec.unmarshalInputNewTransaction(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+func (ec *executionContext) unmarshalNInsertTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertTransaction(ctx context.Context, v interface{}) (*model.InsertTransaction, error) {
+	res, err := ec.unmarshalInputInsertTransaction(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNSortDirection2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐSortDirection(ctx context.Context, v interface{}) (model.SortDirection, error) {
@@ -5083,6 +5083,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐTransactionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Transaction) graphql.Marshaler {
@@ -5159,14 +5191,14 @@ func (ec *executionContext) unmarshalNTransactionSort2githubᚗcomᚋmgealeᚋho
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateBalance2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalance(ctx context.Context, v interface{}) (model.UpdateBalance, error) {
+func (ec *executionContext) unmarshalNUpdateBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalance(ctx context.Context, v interface{}) (*model.UpdateBalance, error) {
 	res, err := ec.unmarshalInputUpdateBalance(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateTransaction2githubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransaction(ctx context.Context, v interface{}) (model.UpdateTransaction, error) {
+func (ec *executionContext) unmarshalNUpdateTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransaction(ctx context.Context, v interface{}) (*model.UpdateTransaction, error) {
 	res, err := ec.unmarshalInputUpdateTransaction(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -5508,6 +5540,46 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
+func (ec *executionContext) unmarshalOInsertBalance2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertBalanceᚄ(ctx context.Context, v interface{}) ([]*model.InsertBalance, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.InsertBalance, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInsertBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertBalance(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOInsertTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertTransactionᚄ(ctx context.Context, v interface{}) ([]*model.InsertTransaction, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.InsertTransaction, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNInsertTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐInsertTransaction(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -5522,6 +5594,44 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
@@ -5582,6 +5692,46 @@ func (ec *executionContext) unmarshalOTransactionFilter2ᚖgithubᚗcomᚋmgeale
 	}
 	res, err := ec.unmarshalInputTransactionFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOUpdateBalance2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalanceᚄ(ctx context.Context, v interface{}) ([]*model.UpdateBalance, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.UpdateBalance, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpdateBalance2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateBalance(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOUpdateTransaction2ᚕᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransactionᚄ(ctx context.Context, v interface{}) ([]*model.UpdateTransaction, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.UpdateTransaction, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpdateTransaction2ᚖgithubᚗcomᚋmgealeᚋhomeserverᚋgraphᚋmodelᚐUpdateTransaction(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

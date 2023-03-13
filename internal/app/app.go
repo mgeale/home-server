@@ -34,64 +34,56 @@ type Application struct {
 	Wg     sync.WaitGroup
 }
 
-func (app *Application) CreateBalance(ctx context.Context, input *model.NewBalance) (string, error) {
-	id, err := app.Models.Balances.Insert(input)
+func (app *Application) CreateBalance(ctx context.Context, input []*model.InsertBalance) ([]string, error) {
+	ids, err := app.Models.Balances.Insert(input)
 	if err != nil {
-		return "0", err
+		return nil, err
 	}
 
-	return id, nil
+	return ids, nil
 }
 
-func (app *Application) CreateTransaction(ctx context.Context, input *model.NewTransaction) (string, error) {
-	id, err := app.Models.Transactions.Insert(input)
+func (app *Application) CreateTransaction(ctx context.Context, input []*model.InsertTransaction) ([]string, error) {
+	ids, err := app.Models.Transactions.Insert(input)
 	if err != nil {
-		return "0", err
+		return nil, err
 	}
 
-	return id, nil
+	return ids, nil
 }
 
-func (app *Application) UpdateBalance(ctx context.Context, input *model.UpdateBalance) (string, error) {
-	values := constructValuesMap(*input)
-	delete(values, "externalid")
-	delete(values, "displayurl")
-
-	err := app.Models.Balances.Update(input.ExternalID, values)
+func (app *Application) UpdateBalance(ctx context.Context, input []*model.UpdateBalance) error {
+	err := app.Models.Balances.Update(input)
 	if err != nil {
-		return "0", err
+		return err
 	}
 
-	return input.ExternalID, nil
+	return nil
 }
 
-func (app *Application) UpdateTransaction(ctx context.Context, input *model.UpdateTransaction) (string, error) {
-	values := constructValuesMap(*input)
-	delete(values, "externalid")
-	delete(values, "displayurl")
-
-	err := app.Models.Transactions.Update(input.ExternalID, values)
+func (app *Application) UpdateTransaction(ctx context.Context, input []*model.UpdateTransaction) error {
+	err := app.Models.Transactions.Update(input)
 	if err != nil {
-		return "0", err
+		return err
 	}
 
-	return input.ExternalID, nil
+	return nil
 }
 
-func (app *Application) DeleteBalance(ctx context.Context, id string) (string, error) {
-	err := app.Models.Balances.Delete(id)
+func (app *Application) DeleteBalance(ctx context.Context, ids []string) error {
+	err := app.Models.Balances.Delete(ids)
 	if err != nil {
-		return "0", err
+		return err
 	}
-	return "1", nil
+	return nil
 }
 
-func (app *Application) DeleteTransaction(ctx context.Context, id string) (string, error) {
-	err := app.Models.Transactions.Delete(id)
+func (app *Application) DeleteTransaction(ctx context.Context, ids []string) error {
+	err := app.Models.Transactions.Delete(ids)
 	if err != nil {
-		return "0", err
+		return err
 	}
-	return "1", nil
+	return nil
 }
 
 func (app *Application) GetBalances(ctx context.Context, where *model.BalanceFilter, orderBy model.BalanceSort, limit *int) ([]*model.Balance, error) {

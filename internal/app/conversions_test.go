@@ -13,16 +13,17 @@ func TestCreateQuery(t *testing.T) {
 		val := "2"
 		field := model.BalanceFieldExternalID
 		fieldBalance := model.BalanceFieldBalance
-		subfilters := make([]*model.BalanceFilter, 2)
-		subfilters[0] = &model.BalanceFilter{
-			Field: &field,
-			Kind:  model.FilterKindEquals,
-			Value: &val,
-		}
-		subfilters[1] = &model.BalanceFilter{
-			Field: &fieldBalance,
-			Kind:  model.FilterKindNotEquals,
-			Value: &val,
+		subfilters := []*model.BalanceFilter{
+			&model.BalanceFilter{
+				Field: &field,
+				Kind:  model.FilterKindEquals,
+				Value: &val,
+			},
+			&model.BalanceFilter{
+				Field: &fieldBalance,
+				Kind:  model.FilterKindNotEquals,
+				Value: &val,
+			},
 		}
 
 		where := &model.BalanceFilter{
@@ -33,16 +34,17 @@ func TestCreateQuery(t *testing.T) {
 		limit := 100
 
 		result := createBalanceQuery(where, orderBy, &limit)
-		resultFilters := make([]*db.Filter, 2)
-		resultFilters[0] = &db.Filter{
-			Field: db.Field("id"),
-			Kind:  db.FilterKind("EQUALS"),
-			Value: &val,
-		}
-		resultFilters[1] = &db.Filter{
-			Field: db.Field("balance"),
-			Kind:  db.FilterKind("NOT_EQUALS"),
-			Value: &val,
+		resultFilters := []*db.Filter{
+			&db.Filter{
+				Field: db.Field("id"),
+				Kind:  db.FilterKind("EQUALS"),
+				Value: &val,
+			},
+			&db.Filter{
+				Field: db.Field("balance"),
+				Kind:  db.FilterKind("NOT_EQUALS"),
+				Value: &val,
+			},
 		}
 		expected := &db.Query{
 			Filters: &db.Filter{

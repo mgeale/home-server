@@ -12,57 +12,57 @@ import (
 )
 
 // CreateBalance is the resolver for the createBalance field.
-func (r *mutationResolver) CreateBalance(ctx context.Context, input model.NewBalance) (string, error) {
-	id, err := r.app.CreateBalance(ctx, &input)
+func (r *mutationResolver) InsertBalances(ctx context.Context, input []*model.InsertBalance) ([]string, error) {
+	ids, err := r.app.CreateBalance(ctx, input)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return nil, gqlerror.Errorf(err.Error())
 	}
-	return id, nil
+	return ids, nil
 }
 
 // CreateTransaction is the resolver for the createTransaction field.
-func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.NewTransaction) (string, error) {
-	id, err := r.app.CreateTransaction(ctx, &input)
+func (r *mutationResolver) InsertTransactions(ctx context.Context, input []*model.InsertTransaction) ([]string, error) {
+	ids, err := r.app.CreateTransaction(ctx, input)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return nil, gqlerror.Errorf(err.Error())
 	}
-	return id, nil
+	return ids, nil
 }
 
 // UpdateBalance is the resolver for the updateBalance field.
-func (r *mutationResolver) UpdateBalance(ctx context.Context, input model.UpdateBalance) (string, error) {
-	id, err := r.app.UpdateBalance(ctx, &input)
+func (r *mutationResolver) UpdateBalances(ctx context.Context, input []*model.UpdateBalance) (string, error) {
+	err := r.app.UpdateBalance(ctx, input)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return "Error", gqlerror.Errorf(err.Error())
 	}
-	return id, nil
+	return "OK", nil
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
-func (r *mutationResolver) UpdateTransaction(ctx context.Context, input model.UpdateTransaction) (string, error) {
-	id, err := r.app.UpdateTransaction(ctx, &input)
+func (r *mutationResolver) UpdateTransactions(ctx context.Context, input []*model.UpdateTransaction) (string, error) {
+	err := r.app.UpdateTransaction(ctx, input)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return "Error", gqlerror.Errorf(err.Error())
 	}
-	return id, nil
+	return "OK", nil
 }
 
 // DeleteBalance is the resolver for the deleteBalance field.
-func (r *mutationResolver) DeleteBalance(ctx context.Context, id string) (string, error) {
-	_, err := r.app.DeleteBalance(ctx, id)
+func (r *mutationResolver) DeleteBalances(ctx context.Context, ids []string) (string, error) {
+	err := r.app.DeleteBalance(ctx, ids)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return "Error", gqlerror.Errorf(err.Error())
 	}
-	return "1", nil
+	return "OK", nil
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
-func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (string, error) {
-	_, err := r.app.DeleteTransaction(ctx, id)
+func (r *mutationResolver) DeleteTransactions(ctx context.Context, ids []string) (string, error) {
+	err := r.app.DeleteTransaction(ctx, ids)
 	if err != nil {
-		return "0", gqlerror.Errorf(err.Error())
+		return "Error", gqlerror.Errorf(err.Error())
 	}
-	return "1", nil
+	return "OK", nil
 }
 
 // Balances is the resolver for the balances field.
